@@ -1,8 +1,9 @@
-import type { Book, ReadingGoal, Statistics, UserSettings } from "../types";
+import type { Book, DailyGoal, ReadingGoal, Statistics, UserSettings } from "../types";
 
 export function calculateReadingGoal(
   book: Book,
-  settings: UserSettings
+  settings: UserSettings,
+  dailyGoal?: DailyGoal
 ): ReadingGoal | null {
   if (!book.target_date || book.completed_at) {
     return null;
@@ -21,10 +22,24 @@ export function calculateReadingGoal(
   const remaining = book.total_progress - book.current_progress;
   const availableHours = settings.reading_end_hour - settings.reading_start_hour;
 
+  // Calculate hours remaining today until end of reading window
+  const now = new Date();
+  const currentHour = now.getHours() + now.getMinutes() / 60;
+  const pagesPerHourToday = calculatePagesPerHourToday(
+    book.current_progress,
+    remaining,
+    daysRemaining,
+    currentHour,
+    settings.reading_start_hour,
+    settings.reading_end_hour,
+    dailyGoal
+  );
+
   if (daysRemaining <= 0) {
     return {
       pagesPerDay: remaining,
       pagesPerHour: availableHours > 0 ? remaining / availableHours : remaining,
+      pagesPerHourToday,
       daysRemaining: 0,
       isOverdue: true,
     };
@@ -36,9 +51,46 @@ export function calculateReadingGoal(
   return {
     pagesPerDay: Math.ceil(pagesPerDay * 10) / 10,
     pagesPerHour: Math.ceil(pagesPerHour * 10) / 10,
+    pagesPerHourToday,
     daysRemaining,
     isOverdue: false,
   };
+}
+
+function calculatePagesPerHourToday(
+  currentProgress: number,
+  remaining: number,
+  daysRemaining: number,
+  currentHour: number,
+  readingStartHour: number,
+  readingEndHour: number,
+  dailyGoal?: DailyGoal
+): number | null {
+  const availableHours = readingEndHour - readingStartHour;
+  if (availableHours <= 0) return null;
+
+  // If past reading hours, return null (reading window closed)
+  if (currentHour >= readingEndHour) {
+    return null;
+  }
+
+  // Calculate hours remaining today
+  const hoursRemainingToday = currentHour < readingStartHour
+    ? availableHours
+    : readingEndHour - currentHour;
+
+  if (hoursRemainingToday <= 0) return null;
+
+  // If we have a daily goal, use it to calculate remaining pages for today
+  if (dailyGoal) {
+    const todayRemaining = Math.max(0, dailyGoal.end - currentProgress);
+    if (todayRemaining === 0) return 0; // Daily goal achieved!
+    return Math.ceil((todayRemaining / hoursRemainingToday) * 10) / 10;
+  }
+
+  // Fallback: calculate based on overall remaining / days
+  const pagesPerDay = daysRemaining > 0 ? remaining / daysRemaining : remaining;
+  return Math.ceil((pagesPerDay / hoursRemainingToday) * 10) / 10;
 }
 
 export function calculateStatistics(

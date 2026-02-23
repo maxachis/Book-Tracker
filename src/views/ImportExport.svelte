@@ -58,37 +58,43 @@
   {/if}
 
   <div class="section">
-    <h3>Import Books</h3>
+    <div class="section-header">
+      <h3>Import Books</h3>
+      <span class="section-ornament">&#9671;</span>
+    </div>
     <p class="description">
       Import books from a CSV file. The CSV must have the following columns:
     </p>
-    <ul class="csv-format">
-      <li><strong>title</strong> (required) - Book title</li>
-      <li><strong>author</strong> - Author name</li>
-      <li><strong>current_progress</strong> - Current reading progress</li>
-      <li><strong>total_progress</strong> (required) - Total pages/locations/percentage</li>
-      <li><strong>progress_type</strong> (required) - "page", "location", or "percentage"</li>
-      <li><strong>target_date</strong> - Target completion date (YYYY-MM-DD)</li>
-      <li><strong>completed_at</strong> - Completion date (YYYY-MM-DD)</li>
-    </ul>
-    <p class="warning">
+    <div class="csv-format">
+      <div class="csv-item"><span class="csv-required">title</span> Book title</div>
+      <div class="csv-item"><span class="csv-optional">author</span> Author name</div>
+      <div class="csv-item"><span class="csv-optional">current_progress</span> Current reading progress</div>
+      <div class="csv-item"><span class="csv-required">total_progress</span> Total pages/locations/percentage</div>
+      <div class="csv-item"><span class="csv-required">progress_type</span> "page", "location", or "percentage"</div>
+      <div class="csv-item"><span class="csv-optional">target_date</span> Target completion date (YYYY-MM-DD)</div>
+      <div class="csv-item"><span class="csv-optional">completed_at</span> Completion date (YYYY-MM-DD)</div>
+    </div>
+    <div class="warning">
       Import will be rejected if any book matches an existing book by title and author.
-    </p>
-    <button class="btn-import" onclick={handleImport} disabled={isImporting}>
+    </div>
+    <button class="btn btn-import" onclick={handleImport} disabled={isImporting}>
       {isImporting ? "Importing..." : "Import from CSV"}
     </button>
   </div>
 
   <div class="section">
-    <h3>Export Books</h3>
+    <div class="section-header">
+      <h3>Export Books</h3>
+      <span class="section-ornament">&#9671;</span>
+    </div>
     <p class="description">
       Export all your books to a CSV file. This can be used for backup or to import into
       another instance.
     </p>
-    <p class="info">
-      You have {appState.books.length + appState.completedBooks.length} books to export.
-    </p>
-    <button class="btn-export" onclick={handleExport} disabled={isExporting}>
+    <div class="info-box">
+      <span class="info-value">{appState.books.length + appState.completedBooks.length}</span> books to export
+    </div>
+    <button class="btn btn-export" onclick={handleExport} disabled={isExporting}>
       {isExporting ? "Exporting..." : "Export to CSV"}
     </button>
   </div>
@@ -101,102 +107,167 @@
 
   h2 {
     margin: 0 0 1.5rem 0;
-    color: #333;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--gold-100);
   }
 
   h3 {
-    margin: 0 0 0.5rem 0;
-    color: #444;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--gold-200);
   }
 
   .message {
-    padding: 0.75rem;
-    border-radius: 4px;
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--radius-sm);
     margin-bottom: 1rem;
+    font-size: 0.85rem;
+    border: 1px solid transparent;
   }
 
   .message.error {
-    background: #ffebee;
-    color: #c62828;
+    background: rgba(196, 114, 114, 0.1);
+    color: var(--accent-red);
+    border-color: rgba(196, 114, 114, 0.2);
   }
 
   .message.success {
-    background: #e8f5e9;
-    color: #2e7d32;
+    background: rgba(122, 182, 122, 0.1);
+    color: var(--accent-green);
+    border-color: rgba(122, 182, 122, 0.2);
   }
 
   .section {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: var(--bg-card);
+    padding: 1.25rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
     margin-bottom: 1rem;
   }
 
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-ornament {
+    color: var(--gold-500);
+    opacity: 0.3;
+    font-size: 0.8rem;
+  }
+
   .description {
-    color: #666;
-    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
     margin: 0 0 1rem 0;
+    line-height: 1.5;
   }
 
   .csv-format {
-    background: #f5f5f5;
-    padding: 1rem 1rem 1rem 2rem;
-    border-radius: 4px;
-    font-size: 0.85rem;
+    background: rgba(212, 185, 120, 0.03);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 0.85rem;
     margin: 0 0 1rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
   }
 
-  .csv-format li {
-    margin-bottom: 0.25rem;
+  .csv-item {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .csv-required,
+  .csv-optional {
+    font-family: "Courier New", monospace;
+    font-size: 0.75rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    min-width: 130px;
+    display: inline-block;
+  }
+
+  .csv-required {
+    background: rgba(212, 185, 120, 0.1);
+    color: var(--gold-300);
+    border: 1px solid rgba(212, 185, 120, 0.15);
+  }
+
+  .csv-optional {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
   }
 
   .warning {
-    background: #fff3e0;
-    color: #e65100;
-    padding: 0.5rem;
-    border-radius: 4px;
-    font-size: 0.85rem;
+    background: rgba(212, 164, 74, 0.08);
+    color: var(--accent-amber);
+    padding: 0.55rem 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(212, 164, 74, 0.15);
+    font-size: 0.82rem;
     margin: 0 0 1rem 0;
   }
 
-  .info {
-    background: #e3f2fd;
-    color: #1565c0;
-    padding: 0.5rem;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    margin: 0 0 1rem 0;
+  .info-box {
+    font-size: 0.82rem;
+    color: var(--gold-300);
+    background: rgba(212, 185, 120, 0.05);
+    border: 1px solid var(--border-subtle);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1rem;
   }
 
-  button {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+  .info-value {
+    font-family: var(--font-display);
+    font-weight: 700;
     font-size: 1rem;
   }
 
+  .btn {
+    padding: 0.6rem 1.25rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: background var(--transition-fast);
+  }
+
   .btn-import {
-    background: #ff9800;
-    color: white;
+    background: var(--accent-amber);
+    color: var(--bg-deep);
   }
 
   .btn-import:hover:not(:disabled) {
-    background: #f57c00;
+    background: var(--gold-400);
   }
 
   .btn-export {
-    background: #2196f3;
-    color: white;
+    background: var(--gold-500);
+    color: var(--bg-deep);
   }
 
   .btn-export:hover:not(:disabled) {
-    background: #1976d2;
+    background: var(--gold-400);
   }
 
-  button:disabled {
-    opacity: 0.6;
+  .btn:disabled {
+    opacity: 0.5;
     cursor: not-allowed;
   }
 </style>

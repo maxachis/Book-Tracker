@@ -52,8 +52,14 @@
 
 <div class="active-books">
   <div class="header">
-    <h2>Active Books</h2>
-    <button class="btn-add" onclick={handleAddBook}>+ Add Book</button>
+    <div class="header-text">
+      <h2>Currently Reading</h2>
+      <span class="book-count">{appState.sortedBooks.length} book{appState.sortedBooks.length !== 1 ? "s" : ""}</span>
+    </div>
+    <button class="btn-add" onclick={handleAddBook}>
+      <span class="btn-icon">+</span>
+      Add Book
+    </button>
   </div>
 
   {#if showForm}
@@ -71,7 +77,7 @@
     onDelete={handleDelete}
     onProgressUpdate={handleProgressUpdate}
     onMarkComplete={handleMarkComplete}
-    emptyMessage="No active books. Add a book to start tracking your reading!"
+    emptyMessage="No active books. Add a book to start tracking your reading."
   />
 </div>
 
@@ -79,7 +85,7 @@
   .active-books {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.25rem;
   }
 
   .header {
@@ -88,26 +94,53 @@
     align-items: center;
   }
 
+  .header-text {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+  }
+
   h2 {
     margin: 0;
-    color: #333;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--gold-100);
+  }
+
+  .book-count {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
   }
 
   .btn-add {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
     padding: 0.5rem 1rem;
-    background: #4caf50;
-    color: white;
+    background: var(--gold-500);
+    color: var(--bg-deep);
     border: none;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
-    font-size: 0.9rem;
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: background var(--transition-fast);
+  }
+
+  .btn-icon {
+    font-size: 1rem;
+    line-height: 1;
   }
 
   .btn-add:hover {
-    background: #43a047;
+    background: var(--gold-400);
   }
 
   .form-container {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
   }
 </style>

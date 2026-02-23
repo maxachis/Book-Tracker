@@ -58,14 +58,17 @@
 </script>
 
 <form class="book-form" onsubmit={handleSubmit}>
-  <h3>{isEditing ? "Edit Book" : "Add New Book"}</h3>
+  <div class="form-header">
+    <h3>{isEditing ? "Edit Book" : "Add New Book"}</h3>
+    <span class="form-ornament">&#9671;</span>
+  </div>
 
   {#if error}
     <div class="error">{error}</div>
   {/if}
 
   <div class="form-group">
-    <label for="title">Title *</label>
+    <label for="title">Title</label>
     <input
       id="title"
       type="text"
@@ -85,24 +88,26 @@
     />
   </div>
 
-  <div class="form-group">
-    <label for="progressType">Progress Type</label>
-    <select id="progressType" bind:value={progressType}>
-      <option value="page">Pages</option>
-      <option value="location">Locations (Kindle)</option>
-      <option value="percentage">Percentage</option>
-    </select>
-  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label for="progressType">Progress Type</label>
+      <select id="progressType" bind:value={progressType}>
+        <option value="page">Pages</option>
+        <option value="location">Locations (Kindle)</option>
+        <option value="percentage">Percentage</option>
+      </select>
+    </div>
 
-  <div class="form-group">
-    <label for="totalProgress">{progressLabel}</label>
-    <input
-      id="totalProgress"
-      type="number"
-      bind:value={totalProgress}
-      min="1"
-      required
-    />
+    <div class="form-group">
+      <label for="totalProgress">{progressLabel}</label>
+      <input
+        id="totalProgress"
+        type="number"
+        bind:value={totalProgress}
+        min="1"
+        required
+      />
+    </div>
   </div>
 
   <div class="form-group">
@@ -122,51 +127,102 @@
 
 <style>
   .book-form {
-    background: white;
+    background: var(--bg-card);
     padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    max-width: 500px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-medium);
+    box-shadow: var(--shadow-md);
+    max-width: 520px;
+  }
+
+  .form-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
   }
 
   h3 {
-    margin: 0 0 1rem 0;
-    color: #333;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--gold-100);
+  }
+
+  .form-ornament {
+    color: var(--gold-500);
+    opacity: 0.4;
+    font-size: 0.9rem;
   }
 
   .error {
-    background: #ffebee;
-    color: #c62828;
-    padding: 0.5rem;
-    border-radius: 4px;
+    background: rgba(196, 114, 114, 0.1);
+    color: var(--accent-red);
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(196, 114, 114, 0.2);
     margin-bottom: 1rem;
+    font-size: 0.85rem;
   }
 
   .form-group {
     margin-bottom: 1rem;
   }
 
+  .form-row {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .form-row .form-group {
+    flex: 1;
+  }
+
   label {
     display: block;
-    margin-bottom: 0.3rem;
-    font-size: 0.9rem;
-    color: #666;
+    margin-bottom: 0.35rem;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
   }
 
   input,
   select {
     width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1rem;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
     box-sizing: border-box;
+    transition: border-color var(--transition-fast);
+  }
+
+  input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.5;
   }
 
   input:focus,
   select:focus {
     outline: none;
-    border-color: #2196f3;
+    border-color: var(--gold-500);
+  }
+
+  select {
+    cursor: pointer;
+  }
+
+  select option {
+    background: var(--bg-card);
+    color: var(--text-primary);
   }
 
   .form-actions {
@@ -174,36 +230,46 @@
     gap: 0.5rem;
     justify-content: flex-end;
     margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-subtle);
   }
 
   button {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
+    padding: 0.5rem 1.1rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
     cursor: pointer;
-    font-size: 0.9rem;
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    transition: all var(--transition-fast);
   }
 
   .btn-primary {
-    background: #2196f3;
-    color: white;
+    background: var(--gold-500);
+    color: var(--bg-deep);
+    border-color: var(--gold-500);
   }
 
   .btn-primary:hover:not(:disabled) {
-    background: #1976d2;
+    background: var(--gold-400);
+    border-color: var(--gold-400);
   }
 
   .btn-primary:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 
   .btn-secondary {
-    background: #e0e0e0;
-    color: #333;
+    background: transparent;
+    border-color: var(--border-medium);
+    color: var(--text-secondary);
   }
 
   .btn-secondary:hover {
-    background: #d0d0d0;
+    border-color: var(--text-muted);
+    color: var(--text-primary);
   }
 </style>

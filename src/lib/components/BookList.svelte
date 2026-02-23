@@ -32,7 +32,10 @@
   <SortControls {sortConfig} {onSort} />
 
   {#if books.length === 0}
-    <p class="empty-message">{emptyMessage}</p>
+    <div class="empty-state">
+      <span class="empty-icon">&#9671;</span>
+      <p class="empty-message">{emptyMessage}</p>
+    </div>
   {:else}
     <div class="books-grid">
       {#each books as book (book.id)}
@@ -62,11 +65,26 @@
     gap: 1rem;
   }
 
-  .empty-message {
+  .empty-state {
     text-align: center;
-    color: #666;
-    padding: 2rem;
-    background: #f9f9f9;
-    border-radius: 8px;
+    padding: 3rem 2rem;
+    border: 1px dashed var(--border-medium);
+    border-radius: var(--radius-lg);
+  }
+
+  .empty-icon {
+    display: block;
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    opacity: 0.3;
+    margin-bottom: 0.75rem;
+  }
+
+  .empty-message {
+    margin: 0;
+    color: var(--text-muted);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1rem;
   }
 </style>

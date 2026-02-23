@@ -1,4 +1,4 @@
-import type { Book, UserSettings, View, SortConfig, Statistics } from "../types";
+import type { Book, UserSettings, View, SortConfig, Statistics, DailyGoal } from "../types";
 import {
   getActiveBooks,
   getCompletedBooks,
@@ -20,6 +20,7 @@ class AppState {
   sortConfig = $state<SortConfig>({ field: "created_at", direction: "desc" });
   isLoading = $state(true);
   error = $state<string | null>(null);
+  dailyGoals = $state<Map<string, DailyGoal>>(new Map());
 
   get statistics(): Statistics {
     const allBooks = [...this.books, ...this.completedBooks];
@@ -106,6 +107,16 @@ class AppState {
 
   clearError() {
     this.error = null;
+  }
+
+  getDailyGoal(bookId: string): DailyGoal | undefined {
+    return this.dailyGoals.get(bookId);
+  }
+
+  setDailyGoal(bookId: string, goal: DailyGoal) {
+    const newMap = new Map(this.dailyGoals);
+    newMap.set(bookId, goal);
+    this.dailyGoals = newMap;
   }
 }
 

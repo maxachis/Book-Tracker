@@ -50,7 +50,10 @@
   {/if}
 
   <div class="settings-section">
-    <h3>Reading Hours</h3>
+    <div class="section-header">
+      <h3>Reading Hours</h3>
+      <span class="section-ornament">&#9671;</span>
+    </div>
     <p class="description">
       Set your typical reading hours. This is used to calculate pages per hour goals.
     </p>
@@ -75,13 +78,16 @@
       </div>
     </div>
 
-    <p class="info">
-      Available reading hours per day: {readingEndHour - readingStartHour} hours
-    </p>
+    <div class="info-box">
+      <span class="info-value">{readingEndHour - readingStartHour}</span> hours available per day
+    </div>
   </div>
 
   <div class="settings-section">
-    <h3>Statistics</h3>
+    <div class="section-header">
+      <h3>Statistics</h3>
+      <span class="section-ornament">&#9671;</span>
+    </div>
     <p class="description">
       Set a start date to filter statistics. Only books created after this date will be
       included in statistics.
@@ -95,19 +101,19 @@
     <div class="stats-display">
       <div class="stat-item">
         <span class="stat-value">{stats.totalBooks}</span>
-        <span class="stat-label">Total Books</span>
+        <span class="stat-label">Total</span>
       </div>
       <div class="stat-item">
-        <span class="stat-value">{stats.completedBooks}</span>
+        <span class="stat-value stat-completed">{stats.completedBooks}</span>
         <span class="stat-label">Completed</span>
       </div>
       <div class="stat-item">
-        <span class="stat-value">{stats.activeBooks}</span>
+        <span class="stat-value stat-active">{stats.activeBooks}</span>
         <span class="stat-label">Active</span>
       </div>
       <div class="stat-item">
         <span class="stat-value">{stats.completionRate}%</span>
-        <span class="stat-label">Completion Rate</span>
+        <span class="stat-label">Rate</span>
       </div>
     </div>
   </div>
@@ -124,42 +130,66 @@
 
   h2 {
     margin: 0 0 1.5rem 0;
-    color: #333;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--gold-100);
   }
 
   h3 {
-    margin: 0 0 0.5rem 0;
-    color: #444;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--gold-200);
   }
 
   .message {
-    padding: 0.75rem;
-    border-radius: 4px;
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--radius-sm);
     margin-bottom: 1rem;
+    font-size: 0.85rem;
+    border: 1px solid transparent;
   }
 
   .message.error {
-    background: #ffebee;
-    color: #c62828;
+    background: rgba(196, 114, 114, 0.1);
+    color: var(--accent-red);
+    border-color: rgba(196, 114, 114, 0.2);
   }
 
   .message.success {
-    background: #e8f5e9;
-    color: #2e7d32;
+    background: rgba(122, 182, 122, 0.1);
+    color: var(--accent-green);
+    border-color: rgba(122, 182, 122, 0.2);
   }
 
   .settings-section {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: var(--bg-card);
+    padding: 1.25rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
     margin-bottom: 1rem;
   }
 
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-ornament {
+    color: var(--gold-500);
+    opacity: 0.3;
+    font-size: 0.8rem;
+  }
+
   .description {
-    color: #666;
-    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
     margin: 0 0 1rem 0;
+    line-height: 1.5;
   }
 
   .form-row {
@@ -174,73 +204,115 @@
 
   label {
     display: block;
-    margin-bottom: 0.3rem;
-    font-size: 0.9rem;
-    color: #666;
+    margin-bottom: 0.35rem;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
   }
 
   select,
   input {
     width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1rem;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
     box-sizing: border-box;
+    transition: border-color var(--transition-fast);
   }
 
-  .info {
-    margin: 0;
-    font-size: 0.85rem;
-    color: #1976d2;
-    background: #e3f2fd;
-    padding: 0.5rem;
-    border-radius: 4px;
+  select:focus,
+  input:focus {
+    outline: none;
+    border-color: var(--gold-500);
+  }
+
+  select option {
+    background: var(--bg-card);
+    color: var(--text-primary);
+  }
+
+  .info-box {
+    font-size: 0.82rem;
+    color: var(--gold-300);
+    background: rgba(212, 185, 120, 0.05);
+    border: 1px solid var(--border-subtle);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+  }
+
+  .info-value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1rem;
   }
 
   .stats-display {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-    margin-top: 1rem;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
   }
 
   .stat-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0.75rem;
-    background: #f5f5f5;
-    border-radius: 4px;
+    padding: 0.75rem 0.5rem;
+    background: rgba(212, 185, 120, 0.03);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
   }
 
   .stat-value {
+    font-family: var(--font-display);
     font-size: 1.5rem;
-    font-weight: bold;
-    color: #1976d2;
+    font-weight: 700;
+    color: var(--gold-300);
+    line-height: 1.2;
+  }
+
+  .stat-completed {
+    color: var(--accent-green);
+  }
+
+  .stat-active {
+    color: var(--accent-amber);
   }
 
   .stat-label {
-    font-size: 0.75rem;
-    color: #666;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 0.15rem;
   }
 
   .btn-save {
-    padding: 0.75rem 1.5rem;
-    background: #2196f3;
-    color: white;
+    padding: 0.6rem 1.5rem;
+    background: var(--gold-500);
+    color: var(--bg-deep);
     border: none;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
-    font-size: 1rem;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: background var(--transition-fast);
   }
 
   .btn-save:hover:not(:disabled) {
-    background: #1976d2;
+    background: var(--gold-400);
   }
 
   .btn-save:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 </style>

@@ -56,6 +56,7 @@ export type View = "active" | "completed" | "settings" | "import-export";
 export interface ReadingGoal {
   pagesPerDay: number;
   pagesPerHour: number;
+  pagesPerHourToday: number | null; // Rate needed from now until end of reading hours today
   daysRemaining: number;
   isOverdue: boolean;
 }
@@ -65,4 +66,9 @@ export interface Statistics {
   completedBooks: number;
   activeBooks: number;
   completionRate: number;
+}
+
+export interface DailyGoal {
+  start: number;
+  end: number;
 }

@@ -28,8 +28,8 @@
 </script>
 
 <div class="sort-controls">
-  <label>
-    Sort by:
+  <label class="sort-label">
+    <span class="label-text">Sort by</span>
     <select value={sortConfig.field} onchange={handleFieldChange}>
       {#each sortOptions as option}
         <option value={option.field}>{option.label}</option>
@@ -37,7 +37,7 @@
     </select>
   </label>
   <button class="direction-button" onclick={toggleDirection}>
-    {sortConfig.direction === "asc" ? "↑ Asc" : "↓ Desc"}
+    {sortConfig.direction === "asc" ? "\u2191 Asc" : "\u2193 Desc"}
   </button>
 </div>
 
@@ -46,34 +46,60 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem;
+    padding: 0.5rem 0;
   }
 
-  label {
+  .sort-label {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.9rem;
-    color: #666;
+  }
+
+  .label-text {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
   }
 
   select {
     padding: 0.3rem 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.9rem;
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+  }
+
+  select:focus {
+    outline: none;
+    border-color: var(--gold-500);
+  }
+
+  select option {
+    background: var(--bg-card);
+    color: var(--text-primary);
   }
 
   .direction-button {
-    padding: 0.3rem 0.5rem;
-    border: 1px solid #ddd;
-    background: white;
-    border-radius: 4px;
+    padding: 0.3rem 0.6rem;
+    border: 1px solid var(--border-medium);
+    background: transparent;
+    border-radius: var(--radius-sm);
     cursor: pointer;
-    font-size: 0.9rem;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    transition: color var(--transition-fast), border-color var(--transition-fast);
   }
 
   .direction-button:hover {
-    background: #f5f5f5;
+    color: var(--gold-300);
+    border-color: var(--gold-500);
   }
 </style>

@@ -67,10 +67,12 @@
 
 <div class="completed-books">
   <div class="header">
-    <h2>Completed Books</h2>
-    <p class="stats">
-      {appState.completedBooks.length} book{appState.completedBooks.length !== 1 ? "s" : ""} completed
-    </p>
+    <div class="header-text">
+      <h2>Finished</h2>
+      <span class="completion-stat">
+        {appState.completedBooks.length} book{appState.completedBooks.length !== 1 ? "s" : ""} completed
+      </span>
+    </div>
   </div>
 
   {#if showForm && editingBook}
@@ -95,7 +97,7 @@
   .completed-books {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.25rem;
   }
 
   .header {
@@ -104,18 +106,27 @@
     align-items: center;
   }
 
-  h2 {
-    margin: 0;
-    color: #333;
+  .header-text {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
   }
 
-  .stats {
+  h2 {
     margin: 0;
-    color: #666;
-    font-size: 0.9rem;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--gold-100);
+  }
+
+  .completion-stat {
+    font-size: 0.8rem;
+    color: var(--accent-green);
+    font-variant-numeric: tabular-nums;
   }
 
   .form-container {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
   }
 </style>

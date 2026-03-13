@@ -5,15 +5,19 @@
   "license": "MIT",
   "architecture": {
     "64bit": {
-      "url": "https://github.com/maxachis/Book-Tracker/releases/download/v0.1.0/Book-Tracker_0.1.0_x64-setup.exe",
-      "hash": ""
+      "url": "https://github.com/maxachis/Book-Tracker/releases/download/v0.1.0/Book.Tracker_0.1.0_x64-setup.exe",
+      "hash": "87c6c88994ae1fc293648586e0754f5d1e12fab090d6aeef40864b0ff22ac5d8"
     }
   },
   "installer": {
-    "args": ["/S"]
+    "args": [
+      "/S"
+    ]
   },
   "uninstaller": {
     "file": "$dir\\uninstall.exe",
-    "args": ["/S"]
+    "args": [
+      "/S"
+    ]
   }
 }

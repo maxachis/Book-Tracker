@@ -1,0 +1,19 @@
+{
+  "version": "0.1.0",
+  "description": "A desktop book tracking application built with Tauri",
+  "homepage": "https://github.com/maxachis/Book-Tracker",
+  "license": "MIT",
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/maxachis/Book-Tracker/releases/download/v0.1.0/Book-Tracker_0.1.0_x64-setup.exe",
+      "hash": ""
+    }
+  },
+  "installer": {
+    "args": ["/S"]
+  },
+  "uninstaller": {
+    "file": "$dir\\uninstall.exe",
+    "args": ["/S"]
+  }
+}

@@ -53,7 +53,7 @@ Key commands: `generate_book_id`, `validate_book_request`, `validate_progress_up
 
 ## Releasing
 
-A GitHub Actions workflow (`.github/workflows/release.yml`) builds the Windows installer and creates a GitHub Release when a version tag is pushed. It also auto-updates the Scoop manifest in `scoop/book-tracker.json`.
+A GitHub Actions workflow (`.github/workflows/release.yml`) builds the Windows installer and creates a GitHub Release when a version tag is pushed. It also auto-updates the Scoop manifest in `bucket/book-tracker.json`.
 
 ```bash
 # Tag a release and push

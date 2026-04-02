@@ -4,6 +4,7 @@
   import ReadingGoals from "./ReadingGoals.svelte";
   import { formatProgress, getProgressPercentage, calculateReadingGoal, getProgressLabel } from "../services/calculations";
   import { appState } from "../stores/state.svelte";
+  import { formatLocalDate } from "../services/dates";
 
   interface Props {
     book: Book;
@@ -217,13 +218,13 @@
     {#if book.target_date}
       <span class="meta-item">
         <span class="meta-icon">&#9670;</span>
-        Target: {new Date(book.target_date).toLocaleDateString()}
+        Target: {formatLocalDate(book.target_date)}
       </span>
     {/if}
     {#if book.completed_at}
       <span class="meta-item completed-meta">
         <span class="meta-icon">&#10003;</span>
-        Completed: {new Date(book.completed_at).toLocaleDateString()}
+        Completed: {formatLocalDate(book.completed_at)}
       </span>
     {/if}
   </div>

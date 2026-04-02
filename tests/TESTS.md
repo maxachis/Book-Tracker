@@ -11,6 +11,12 @@ Tests for the reading goal calculation and statistics services.
 - **formatProgress**: Tests formatting of progress display strings.
 - **getProgressPercentage**: Tests percentage calculation for book progress.
 
+## dates.test.ts
+
+Tests for date formatting utilities that avoid timezone-related display bugs.
+
+- **formatLocalDate**: Verifies that YYYY-MM-DD date strings are displayed as the correct local date (not shifted by UTC parsing), and that full datetime strings are handled normally.
+
 ## daily-goals.test.ts
 
 Tests for daily goal state management and persistence logic.

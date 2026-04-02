@@ -12,12 +12,15 @@ export function calculateReadingGoal(
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const target = new Date(book.target_date);
-  target.setHours(0, 0, 0, 0);
+  // Parse target_date as local date to avoid UTC timezone shift
+  const [year, month, day] = book.target_date.split('-').map(Number);
+  const target = new Date(year, month - 1, day);
 
-  const daysRemaining = Math.ceil(
+  const daysUntilTarget = Math.ceil(
     (target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
   );
+  // Include today as an available reading day
+  const daysRemaining = daysUntilTarget + 1;
 
   const remaining = book.total_progress - book.current_progress;
   const availableHours = settings.reading_end_hour - settings.reading_start_hour;

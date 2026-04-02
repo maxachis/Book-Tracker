@@ -1,0 +1,47 @@
+{
+  "name": "Book-Tracker",
+  "initializeCommand": "token=$(gh auth token 2>/dev/null) && echo \"GH_TOKEN=$token\" > .devcontainer/.env.secrets || : > .devcontainer/.env.secrets",
+  "image": "mcr.microsoft.com/devcontainers/rust:1",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "vadimcn.vscode-lldb",
+        "serayuzgur.crates",
+        "svelte.svelte-vscode"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "[rust]": {
+          "editor.defaultFormatter": "rust-lang.rust-analyzer"
+        },
+        "rust-analyzer.check.command": "clippy",
+        "workbench.colorTheme": "Default Dark Modern"
+      }
+    }
+  },
+  "postCreateCommand": {
+    "cli-tools": "npm install -g @anthropic-ai/claude-code @fission-ai/openspec@latest",
+    "project-deps": "npm install && cargo build --manifest-path src-tauri/Cargo.toml"
+  },
+  "runArgs": [
+    "--env-file",
+    ".devcontainer/.env.secrets"
+  ],
+  "containerEnv": {
+    "TZ": "America/New_York"
+  },
+  "mounts": [
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,readonly",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude.json,target=/home/vscode/.claude.json,type=bind,consistency=cached",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.config/gh,target=/home/vscode/.config/gh,type=bind,readonly"
+  ],
+  "forwardPorts": [1420, 1421],
+  "remoteUser": "vscode"
+}

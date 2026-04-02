@@ -60,7 +60,9 @@ describe('calculateReadingGoal', () => {
     expect(result).toBeNull();
   });
 
-  it('calculates pages per day correctly', () => {
+  it('counts today as an available reading day in daysRemaining', () => {
+    // Mock date: 2024-06-15. Target: 2024-06-19.
+    // Available days: June 15, 16, 17, 18, 19 = 5 days
     const book = createMockBook({
       current_progress: 100,
       total_progress: 300,
@@ -71,11 +73,27 @@ describe('calculateReadingGoal', () => {
     const result = calculateReadingGoal(book, settings);
 
     expect(result).not.toBeNull();
-    expect(result!.daysRemaining).toBeGreaterThan(0);
+    expect(result!.daysRemaining).toBe(5);
     expect(result!.isOverdue).toBe(false);
-    // Verify the calculation: pagesPerDay = remaining / daysRemaining
-    const expectedPagesPerDay = (300 - 100) / result!.daysRemaining;
-    expect(result!.pagesPerDay).toBeCloseTo(Math.ceil(expectedPagesPerDay * 10) / 10, 1);
+    // 200 remaining pages / 5 days = 40 pages per day
+    expect(result!.pagesPerDay).toBe(40);
+  });
+
+  it('counts today as 1 day remaining when target is today', () => {
+    const book = createMockBook({
+      current_progress: 100,
+      total_progress: 300,
+      target_date: '2024-06-15', // Same as mock date
+    });
+    const settings = createMockSettings();
+
+    const result = calculateReadingGoal(book, settings);
+
+    expect(result).not.toBeNull();
+    expect(result!.daysRemaining).toBe(1);
+    expect(result!.isOverdue).toBe(false);
+    // 200 remaining pages / 1 day = 200 pages per day
+    expect(result!.pagesPerDay).toBe(200);
   });
 
   it('calculates pages per hour correctly', () => {

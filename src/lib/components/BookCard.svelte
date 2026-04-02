@@ -40,8 +40,14 @@
     return Math.min(startProgress + defaultIncrement, book.total_progress);
   }
 
+  let lastTargetDate = $state(book.target_date);
+
   $effect(() => {
-    if (!isCompleted && !appState.getDailyGoal(book.id)) {
+    const targetChanged = book.target_date !== lastTargetDate;
+    if (targetChanged) {
+      lastTargetDate = book.target_date;
+    }
+    if (!isCompleted && (!appState.getDailyGoal(book.id) || targetChanged)) {
       appState.setDailyGoal(book.id, {
         start: book.current_progress,
         end: getDefaultDailyGoalEnd(book.current_progress)

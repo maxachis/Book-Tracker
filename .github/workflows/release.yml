@@ -19,29 +19,33 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
-          workspaces: src-tauri
+          go-version: '1.22'
+          cache-dependency-path: wails/go.sum
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
       - name: Install frontend dependencies
-        run: npm ci
+        working-directory: wails/frontend
+        run: npm install
 
-      - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Wails app
+        working-directory: wails
+        run: wails build -platform windows/amd64 -clean
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'Book Tracker ${{ github.ref_name }}'
-          releaseBody: 'See the assets below to download and install Book Tracker for Windows.'
-          releaseDraft: false
+          tag_name: ${{ github.ref_name }}
+          name: 'Book Tracker ${{ github.ref_name }}'
+          body: 'Download book-tracker.exe below to run Book Tracker on Windows.'
+          draft: false
           prerelease: false
+          files: wails/build/bin/book-tracker.exe
 
   update-scoop-manifest:
     needs: build-windows
@@ -54,23 +58,19 @@ jobs:
         id: version
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Get NSIS installer hash
+      - name: Get executable hash
         id: hash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Download the NSIS exe installer from the release
-          # Product name "Book Tracker" may produce "Book Tracker_" or "Book-Tracker_"
           gh release download "${{ github.ref_name }}" \
-            --pattern "*_x64-setup.exe" \
+            --pattern "book-tracker.exe" \
             --dir /tmp/release
 
-          # Compute SHA256
-          FILE=$(ls /tmp/release/*_x64-setup.exe)
-          HASH=$(sha256sum "$FILE" | awk '{print $0}' | cut -d' ' -f1)
-          FILENAME=$(basename "$FILE")
+          FILE=/tmp/release/book-tracker.exe
+          HASH=$(sha256sum "$FILE" | cut -d' ' -f1)
           echo "hash=$HASH" >> "$GITHUB_OUTPUT"
-          echo "filename=$FILENAME" >> "$GITHUB_OUTPUT"
+          echo "filename=book-tracker.exe" >> "$GITHUB_OUTPUT"
 
       - name: Update Scoop manifest
         env:
@@ -84,7 +84,7 @@ jobs:
           filename = urllib.parse.quote(os.environ['FILENAME'])
           manifest = {
               'version': os.environ['VERSION'],
-              'description': 'A desktop book tracking application built with Tauri',
+              'description': 'A desktop book tracking application built with Wails',
               'homepage': 'https://github.com/maxachis/Book-Tracker',
               'license': 'MIT',
               'architecture': {
@@ -93,11 +93,8 @@ jobs:
                       'hash': os.environ['HASH']
                   }
               },
-              'installer': {'args': ['/S']},
-              'uninstaller': {
-                  'file': '\$dir\\\\uninstall.exe',
-                  'args': ['/S']
-              }
+              'bin': 'book-tracker.exe',
+              'shortcuts': [['book-tracker.exe', 'Book Tracker']]
           }
           with open('bucket/book-tracker.json', 'w') as f:
               json.dump(manifest, f, indent=2)

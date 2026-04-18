@@ -10,3 +10,6 @@
 - **TestUpdateBook_ClearsCompletedAt**: Writing a nil `completed_at` clears a previously-set value.
 - **TestDeleteBook**: Deleting removes the row so subsequent reads fail.
 - **TestBooksCRUD_FileBacked**: Runs insert + list against a real on-disk SQLite DB.
+- **TestGetSettings_SeededDefaults**: After `Open`, the seeded settings row returns the `(8, 22, nil)` defaults.
+- **TestUpdateSettings_PersistsFields**: Updates hours and stats_start_date, then reloads to confirm they were written.
+- **TestSettings_FileBacked**: Settings round-trip against a file-backed DB to exercise the real driver.

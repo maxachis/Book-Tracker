@@ -67,3 +67,11 @@ func (a *App) DeleteBook(id string) error {
 func (a *App) MarkBookComplete(id string) (model.Book, error) {
 	return a.service.MarkBookComplete(id)
 }
+
+func (a *App) GetSettings() (model.UserSettings, error) {
+	return a.service.GetSettings()
+}
+
+func (a *App) UpdateSettings(req model.UpdateSettingsRequest) (model.UserSettings, error) {
+	return a.service.UpdateSettings(req)
+}

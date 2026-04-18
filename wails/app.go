@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"time"
 
 	"github.com/maxachis/book-tracker/wails/model"
 	"github.com/maxachis/book-tracker/wails/service"
@@ -75,3 +76,28 @@ func (a *App) GetSettings() (model.UserSettings, error) {
 func (a *App) UpdateSettings(req model.UpdateSettingsRequest) (model.UserSettings, error) {
 	return a.service.UpdateSettings(req)
 }
+
+// ValidateProgressUpdate returns "" if the progress delta is valid, else
+// the error message. progressType is accepted for parity with the legacy
+// Rust IPC signature; it is not currently used for validation.
+func (a *App) ValidateProgressUpdate(current, total int, progressType string) string {
+	if err := service.ValidateProgressUpdate(current, total); err != nil {
+		return err.Error()
+	}
+	return ""
+}
+
+// ValidateSettings returns "" if the settings request is valid, else the
+// error message.
+func (a *App) ValidateSettings(req model.UpdateSettingsRequest) string {
+	if err := service.ValidateSettings(req); err != nil {
+		return err.Error()
+	}
+	return ""
+}
+
+// NowTimestamp returns the current UTC time as an RFC3339 string.
+func (a *App) NowTimestamp() string {
+	return time.Now().UTC().Format(time.RFC3339)
+}
+

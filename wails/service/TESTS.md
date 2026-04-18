@@ -13,3 +13,5 @@
 - **TestGetSettings_DefaultsWhenMissing**: With the settings row deleted, `GetSettings` returns the hard-coded defaults (`8`, `22`, nil).
 - **TestUpdateSettings_MergesAndValidates**: Partial updates merge over the existing row without clobbering untouched fields.
 - **TestUpdateSettings_InvalidRange**: Out-of-range hours and `start >= end` combinations are rejected.
+- **TestValidateProgressUpdate**: Direct table-driven coverage of the pure `ValidateProgressUpdate` function — zero, equal, under, negative, and over-total.
+- **TestValidateSettings**: Direct table-driven coverage of `ValidateSettings` — valid pair, out-of-range start/end, and start>=end combinations.

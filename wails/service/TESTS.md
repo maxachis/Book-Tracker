@@ -15,3 +15,10 @@
 - **TestUpdateSettings_InvalidRange**: Out-of-range hours and `start >= end` combinations are rejected.
 - **TestValidateProgressUpdate**: Direct table-driven coverage of the pure `ValidateProgressUpdate` function — zero, equal, under, negative, and over-total.
 - **TestValidateSettings**: Direct table-driven coverage of `ValidateSettings` — valid pair, out-of-range start/end, and start>=end combinations.
+- **TestParseCSVBooks_ValidRows**: Parses a well-formed CSV and checks nullable fields become `nil` when empty.
+- **TestParseCSVBooks_RejectsInvalidProgressType**: Rows with a progress_type outside `page|location|percentage` return an error naming the bad value.
+- **TestParseCSVBooks_NonNumericProgress**: Non-integer `current_progress` / `total_progress` cells surface a parse error.
+- **TestGenerateCSVExport_HeaderAndRows**: Export emits the canonical header order and serializes nil pointers as empty cells.
+- **TestCSVRoundTrip**: `ParseCSVBooks(GenerateCSVExport(books))` yields equivalent records for books with and without optional fields.
+- **TestCheckDuplicates_Flags**: Case-insensitive title+author matches (including both-nil authors) are reported; mismatched authors and unique titles are not.
+- **TestCheckDuplicates_EmptyInputs**: Empty records/existing slices return an empty slice without error.

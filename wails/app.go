@@ -101,3 +101,21 @@ func (a *App) NowTimestamp() string {
 	return time.Now().UTC().Format(time.RFC3339)
 }
 
+func (a *App) ParseCSVBooks(content string) ([]model.CSVBookRecord, error) {
+	return service.ParseCSVBooks(content)
+}
+
+func (a *App) GenerateCSVExport(books []model.Book) (string, error) {
+	return service.GenerateCSVExport(books)
+}
+
+// CheckDuplicates loads all persisted books and returns any CSV rows that
+// collide with an existing book by case-insensitive title+author.
+func (a *App) CheckDuplicates(records []model.CSVBookRecord) ([]model.DuplicateReport, error) {
+	existing, err := a.service.Store.ListAllBooks()
+	if err != nil {
+		return nil, err
+	}
+	return service.CheckDuplicates(records, existing), nil
+}
+

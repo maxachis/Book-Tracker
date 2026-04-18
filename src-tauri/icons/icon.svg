@@ -1,9 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="84 80 344 344">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#1a1814"/>
-      <stop offset="100%" stop-color="#0f0e0c"/>
-    </linearGradient>
     <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#e8d5a3"/>
       <stop offset="100%" stop-color="#b8943f"/>
@@ -17,15 +13,6 @@
       <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
     </linearGradient>
   </defs>
-
-  <!-- Background -->
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-
-  <!-- Subtle corner ornaments -->
-  <path d="M56,56 L56,86 M56,56 L86,56" stroke="#d4b978" stroke-width="2" opacity="0.2" fill="none" stroke-linecap="round"/>
-  <path d="M456,56 L456,86 M456,56 L426,56" stroke="#d4b978" stroke-width="2" opacity="0.2" fill="none" stroke-linecap="round"/>
-  <path d="M56,456 L56,426 M56,456 L86,456" stroke="#d4b978" stroke-width="2" opacity="0.2" fill="none" stroke-linecap="round"/>
-  <path d="M456,456 L456,426 M456,456 L426,456" stroke="#d4b978" stroke-width="2" opacity="0.2" fill="none" stroke-linecap="round"/>
 
   <!-- Book - back cover -->
   <rect x="128" y="88" width="228" height="336" rx="6" fill="#2e2b25" stroke="#d4b978" stroke-width="1.5" opacity="0.4"/>

@@ -39,3 +39,31 @@ func (a *App) ValidateCreateBookRequest(r model.CreateBookRequest) string {
 	}
 	return ""
 }
+
+func (a *App) CreateBook(req model.CreateBookRequest) (model.Book, error) {
+	return a.service.CreateBook(req)
+}
+
+func (a *App) ListActiveBooks() ([]model.Book, error) {
+	return a.service.Store.ListActiveBooks()
+}
+
+func (a *App) ListCompletedBooks() ([]model.Book, error) {
+	return a.service.Store.ListCompletedBooks()
+}
+
+func (a *App) ListAllBooks() ([]model.Book, error) {
+	return a.service.Store.ListAllBooks()
+}
+
+func (a *App) UpdateBook(req model.UpdateBookRequest) (model.Book, error) {
+	return a.service.UpdateBook(req)
+}
+
+func (a *App) DeleteBook(id string) error {
+	return a.service.Store.DeleteBook(id)
+}
+
+func (a *App) MarkBookComplete(id string) (model.Book, error) {
+	return a.service.MarkBookComplete(id)
+}

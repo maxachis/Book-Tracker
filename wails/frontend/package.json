@@ -23,10 +23,5 @@
     "vite": "^5.4.0",
     "vitest": "^4.0.18"
   },
-  "dependencies": {
-    "@tauri-apps/api": "^2.0.0",
-    "@tauri-apps/plugin-dialog": "^2.0.0",
-    "@tauri-apps/plugin-fs": "^2.0.0",
-    "@tauri-apps/plugin-sql": "^2.0.0"
-  }
+  "dependencies": {}
 }

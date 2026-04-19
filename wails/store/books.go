@@ -79,7 +79,7 @@ func (s *Store) queryBooks(query string, args ...any) ([]model.Book, error) {
 		return nil, fmt.Errorf("query books: %w", err)
 	}
 	defer rows.Close()
-	var out []model.Book
+	out := []model.Book{}
 	for rows.Next() {
 		b, err := scanBook(rows)
 		if err != nil {

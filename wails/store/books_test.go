@@ -212,6 +212,36 @@ func TestDeleteBook(t *testing.T) {
 	}
 }
 
+func TestListBooks_EmptyReturnsNonNilSlice(t *testing.T) {
+	s, err := Open(":memory:")
+	if err != nil {
+		t.Fatalf("open: %v", err)
+	}
+	defer s.Close()
+
+	for _, tc := range []struct {
+		name string
+		fn   func() ([]model.Book, error)
+	}{
+		{"active", s.ListActiveBooks},
+		{"completed", s.ListCompletedBooks},
+		{"all", s.ListAllBooks},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := tc.fn()
+			if err != nil {
+				t.Fatalf("%s: %v", tc.name, err)
+			}
+			if got == nil {
+				t.Fatalf("%s returned nil slice; want non-nil empty slice so JSON marshals to [] not null", tc.name)
+			}
+			if len(got) != 0 {
+				t.Fatalf("%s: expected empty, got %d", tc.name, len(got))
+			}
+		})
+	}
+}
+
 func TestBooksCRUD_FileBacked(t *testing.T) {
 	dir := t.TempDir()
 	s, err := Open(filepath.Join(dir, "file.db"))

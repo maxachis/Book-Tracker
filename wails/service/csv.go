@@ -27,7 +27,7 @@ func ParseCSVBooks(content string) ([]model.CSVBookRecord, error) {
 	r := csv.NewReader(strings.NewReader(content))
 	header, err := r.Read()
 	if err == io.EOF {
-		return nil, nil
+		return []model.CSVBookRecord{}, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("read header: %w", err)
@@ -37,7 +37,7 @@ func ParseCSVBooks(content string) ([]model.CSVBookRecord, error) {
 		return nil, err
 	}
 
-	var out []model.CSVBookRecord
+	out := []model.CSVBookRecord{}
 	for {
 		row, err := r.Read()
 		if err == io.EOF {
@@ -102,7 +102,7 @@ func GenerateCSVExport(books []model.Book) (string, error) {
 // existing book. Comparison is case-insensitive on title and author; both
 // authors nil counts as a match.
 func CheckDuplicates(records []model.CSVBookRecord, existing []model.Book) []model.DuplicateReport {
-	var out []model.DuplicateReport
+	out := []model.DuplicateReport{}
 	for _, rec := range records {
 		for _, b := range existing {
 			if !strings.EqualFold(rec.Title, b.Title) {

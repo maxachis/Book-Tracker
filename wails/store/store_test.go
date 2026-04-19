@@ -2,10 +2,22 @@ package store
 
 import (
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	_ "modernc.org/sqlite"
 )
+
+func TestDBSubdir_MatchesTauriOnWindows(t *testing.T) {
+	got := dbSubdir()
+	want := "book-tracker"
+	if runtime.GOOS == "windows" {
+		want = "com.book-tracker.app"
+	}
+	if got != want {
+		t.Fatalf("dbSubdir on %s = %q, want %q", runtime.GOOS, got, want)
+	}
+}
 
 func TestOpen_InMemory_AppliesSchema(t *testing.T) {
 	s, err := Open(":memory:")

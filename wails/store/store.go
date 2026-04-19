@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/maxachis/book-tracker/wails/migrations"
 
@@ -35,11 +36,21 @@ func DefaultDBPath() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("user config dir: %w", err)
 	}
-	dir := filepath.Join(cfg, "book-tracker")
+	dir := filepath.Join(cfg, dbSubdir())
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", fmt.Errorf("mkdir %s: %w", dir, err)
 	}
 	return filepath.Join(dir, "book-tracker.db"), nil
+}
+
+// dbSubdir returns the per-user subdirectory name for the DB file.
+// On Windows we match the Tauri build's AppConfig path, which nests under
+// the bundle identifier ("com.book-tracker.app") so upgraders keep their data.
+func dbSubdir() string {
+	if runtime.GOOS == "windows" {
+		return "com.book-tracker.app"
+	}
+	return "book-tracker"
 }
 
 func (s *Store) Close() error {

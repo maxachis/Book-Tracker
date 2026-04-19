@@ -55,7 +55,7 @@ Exposed methods on `App` become callable from the frontend via `window.go.main.A
 - Books: `id`, `title`, `author`, `total_progress`, `current_progress`, `progress_type` (`page` | `location` | `percentage`), `target_date`, timestamps
 - Settings: reading hours config, goal targets
 - Auto-complete when `current_progress >= total_progress`
-- SQLite file: `book-tracker.db` under `os.UserConfigDir()/book-tracker/`
+- SQLite file: `book-tracker.db` under `os.UserConfigDir()/book-tracker/` — on Windows the subdir is `com.book-tracker.app` to match the Tauri build's `%APPDATA%\com.book-tracker.app\` path so upgraders keep their data
 
 ## Go Code Style
 

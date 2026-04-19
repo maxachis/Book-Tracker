@@ -9,10 +9,15 @@
 
   let { book, onSubmit, onCancel }: Props = $props();
 
+  // svelte-ignore state_referenced_locally
   let title = $state(book?.title ?? "");
+  // svelte-ignore state_referenced_locally
   let author = $state(book?.author ?? "");
+  // svelte-ignore state_referenced_locally
   let totalProgress = $state(book?.total_progress ?? 300);
+  // svelte-ignore state_referenced_locally
   let progressType = $state<ProgressType>(book?.progress_type ?? "page");
+  // svelte-ignore state_referenced_locally
   let targetDate = $state(book?.target_date ?? "");
   let isSubmitting = $state(false);
   let error = $state<string | null>(null);

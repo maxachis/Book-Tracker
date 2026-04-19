@@ -18,6 +18,7 @@
   let { book, settings, onEdit, onDelete, onProgressUpdate, onMarkComplete }: Props =
     $props();
 
+  // svelte-ignore state_referenced_locally
   let progressInput = $state(book.current_progress);
   let isUpdating = $state(false);
 
@@ -41,6 +42,7 @@
     return Math.min(startProgress + defaultIncrement, book.total_progress);
   }
 
+  // svelte-ignore state_referenced_locally
   let lastTargetDate = $state(book.target_date);
 
   $effect(() => {

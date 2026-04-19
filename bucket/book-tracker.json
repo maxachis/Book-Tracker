@@ -1,23 +1,19 @@
 {
-  "version": "0.1.0",
-  "description": "A desktop book tracking application built with Tauri",
+  "version": "0.2.0",
+  "description": "A desktop book tracking application built with Wails",
   "homepage": "https://github.com/maxachis/Book-Tracker",
   "license": "MIT",
   "architecture": {
     "64bit": {
-      "url": "https://github.com/maxachis/Book-Tracker/releases/download/v0.1.0/Book.Tracker_0.1.0_x64-setup.exe",
-      "hash": "87c6c88994ae1fc293648586e0754f5d1e12fab090d6aeef40864b0ff22ac5d8"
+      "url": "https://github.com/maxachis/Book-Tracker/releases/download/v0.2.0/book-tracker.exe",
+      "hash": "4f88a8c5719518e3c51ec033c26bed0e36edc9632f1cace9e4015a2cb4057d61"
     }
   },
-  "installer": {
-    "args": [
-      "/S"
+  "bin": "book-tracker.exe",
+  "shortcuts": [
+    [
+      "book-tracker.exe",
+      "Book Tracker"
     ]
-  },
-  "uninstaller": {
-    "file": "$dir\\uninstall.exe",
-    "args": [
-      "/S"
-    ]
-  }
+  ]
 }

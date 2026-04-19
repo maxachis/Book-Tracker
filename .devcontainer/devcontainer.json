@@ -27,7 +27,7 @@
   },
   "postCreateCommand": {
     "cli-tools": "npm install -g @anthropic-ai/claude-code @fission-ai/openspec@latest",
-    "project-deps": "npm install && cargo build --manifest-path src-tauri/Cargo.toml"
+    "project-deps": "cd wails/frontend && npm install && cd .. && go mod download"
   },
   "runArgs": [
     "--env-file",

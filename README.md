@@ -1,6 +1,6 @@
 # Book Tracker
 
-A desktop application for tracking your reading progress, built with Tauri, Svelte 5, and SQLite.
+A desktop application for tracking your reading progress, built with Wails v2, Svelte 5, and SQLite.
 
 ## Features
 
@@ -16,37 +16,30 @@ A desktop application for tracking your reading progress, built with Tauri, Svel
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) (v18 or later)
-- [Rust](https://rustup.rs/) (latest stable)
-- Platform-specific dependencies for Tauri: [see Tauri prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites)
+- [Go](https://go.dev/) 1.22+
+- [Wails CLI](https://wails.io/): `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
+- Platform dependencies: [see Wails prerequisites](https://wails.io/docs/gettingstarted/installation#platform-specific-dependencies)
 
 ### Setup
 
 ```bash
-# Clone the repository
 git clone <repository-url>
-cd Book-Tracker
-
-# Install dependencies
-npm install
+cd Book-Tracker/wails/frontend && npm install
 ```
 
 ## Development
 
 ```bash
-# Run in development mode with hot reload
-npm run tauri dev
+cd wails && wails dev
 ```
 
 ## Building
 
 ```bash
-# Build for production
-npm run tauri build
+cd wails && wails build
 ```
 
-The executable will be created at:
-- **Windows**: `src-tauri/target/release/Book Tracker.exe`
-- **Installers**: `src-tauri/target/release/bundle/`
+The executable will be created at `wails/build/bin/book-tracker` (or `.exe` on Windows).
 
 ## Usage
 
@@ -91,28 +84,28 @@ Overdue books are highlighted in red.
 
 ```
 Book-Tracker/
-├── src/                        # Svelte frontend
-│   ├── App.svelte
-│   ├── lib/
-│   │   ├── components/         # UI components
-│   │   ├── services/           # Database & calculations
-│   │   ├── stores/             # Svelte 5 state management
-│   │   └── types/              # TypeScript interfaces
-│   └── views/                  # Main views
-├── src-tauri/                  # Rust backend
-│   ├── src/
-│   │   ├── commands/           # Tauri commands
-│   │   ├── models/             # Data structures
-│   │   └── db/                 # Database migrations
-│   └── tauri.conf.json
-└── package.json
+├── wails/
+│   ├── main.go                 # Wails bootstrap
+│   ├── app.go                  # IPC endpoints
+│   ├── store/                  # SQLite persistence
+│   ├── model/                  # Data structures
+│   ├── service/                # Business logic (validation, CSV, calculations)
+│   ├── migrations/             # Embedded SQL migrations
+│   └── frontend/               # Svelte 5 frontend
+│       └── src/
+│           ├── lib/components/ # UI components
+│           ├── lib/services/   # Calculations & date helpers
+│           ├── lib/stores/     # Svelte 5 state
+│           └── views/          # Main views
+├── bucket/                     # Scoop manifest
+└── deprecated/src-tauri/       # Retired Tauri backend (archived)
 ```
 
 ## Technologies
 
 - **Frontend**: [Svelte 5](https://svelte.dev/) with TypeScript
-- **Backend**: [Tauri 2.0](https://tauri.app/) (Rust)
-- **Database**: SQLite via [tauri-plugin-sql](https://github.com/tauri-apps/plugins-workspace)
+- **Backend**: [Wails v2](https://wails.io/) (Go)
+- **Database**: SQLite via [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite) (pure Go)
 - **Build Tool**: [Vite](https://vitejs.dev/)
 
 ## License

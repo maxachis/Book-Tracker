@@ -6,13 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Book Tracker** — desktop app for tracking reading progress and goals.
 
-Currently mid-migration from **Tauri 2.0 + Rust** to **Wails v2 + Go**. Both trees coexist during the port:
-
-- `src-tauri/` — original Rust backend (being retired)
-- `wails/` — new Go backend (active development)
-- `src/` — shared Svelte 5 frontend (reused across both)
-
-Prefer working in `wails/` for new backend work. Don't port features to Go until there is a passing test covering them (red-green TDD).
+Built with **Wails v2 + Go** and **Svelte 5**. All development happens in `wails/`. The prior Tauri+Rust implementation is archived under `deprecated/src-tauri/` for reference only — do not edit it.
 
 ## Build & Development Commands
 

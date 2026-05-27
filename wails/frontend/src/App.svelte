@@ -4,6 +4,7 @@
   import Navigation from "./lib/components/Navigation.svelte";
   import ActiveBooks from "./views/ActiveBooks.svelte";
   import CompletedBooks from "./views/CompletedBooks.svelte";
+  import Today from "./views/Today.svelte";
   import Settings from "./views/Settings.svelte";
   import ImportExport from "./views/ImportExport.svelte";
 
@@ -40,6 +41,8 @@
       <ActiveBooks />
     {:else if appState.currentView === "completed"}
       <CompletedBooks />
+    {:else if appState.currentView === "today"}
+      <Today />
     {:else if appState.currentView === "settings"}
       <Settings />
     {:else if appState.currentView === "import-export"}

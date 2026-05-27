@@ -12,6 +12,8 @@ export function GenerateBookID():Promise<string>;
 
 export function GenerateCSVExport(arg1:Array<model.Book>):Promise<string>;
 
+export function GetDailyReadingSummary(arg1:string):Promise<model.DailyReadingSummary>;
+
 export function GetSettings():Promise<model.UserSettings>;
 
 export function ListActiveBooks():Promise<Array<model.Book>>;

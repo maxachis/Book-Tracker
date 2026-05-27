@@ -101,6 +101,10 @@ func (a *App) NowTimestamp() string {
 	return time.Now().UTC().Format(time.RFC3339)
 }
 
+func (a *App) GetDailyReadingSummary(date string) (model.DailyReadingSummary, error) {
+	return a.service.Store.GetDailyReadingSummary(date)
+}
+
 func (a *App) ParseCSVBooks(content string) ([]model.CSVBookRecord, error) {
 	return service.ParseCSVBooks(content)
 }

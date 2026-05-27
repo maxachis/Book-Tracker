@@ -13,3 +13,10 @@
 - **TestGetSettings_SeededDefaults**: After `Open`, the seeded settings row returns the `(8, 22, nil)` defaults.
 - **TestUpdateSettings_PersistsFields**: Updates hours and stats_start_date, then reloads to confirm they were written.
 - **TestSettings_FileBacked**: Settings round-trip against a file-backed DB to exercise the real driver.
+- **TestUpsertReadingSession_InsertsNew**: Upserting a session for a new (book_id, date) creates a row with the correct delta.
+- **TestUpsertReadingSession_AccumulatesOnSameDay**: Two upserts on the same (book_id, date) add their deltas together.
+- **TestUpsertReadingSession_SeparateDaysAreIndependent**: Sessions on different dates keep separate deltas.
+- **TestGetDailyReadingSummary_EmptyDay**: Querying a date with no sessions returns an empty Books slice and the correct Date field.
+- **TestGetDailyReadingSummary_IncludesBookTitle**: The summary joins books to surface the book title and progress_type.
+- **TestGetDailyReadingSummary_MultipleBooks**: Multiple books with sessions on the same day all appear in the summary.
+- **TestUpsertReadingSession_FileBacked**: Upsert and summary round-trip against a file-backed DB.

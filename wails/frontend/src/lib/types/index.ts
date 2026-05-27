@@ -51,7 +51,19 @@ export interface SortConfig {
   direction: SortDirection;
 }
 
-export type View = "active" | "completed" | "settings" | "import-export";
+export type View = "active" | "completed" | "today" | "settings" | "import-export";
+
+export interface BookSessionSummary {
+  book_id: string;
+  title: string;
+  progress_delta: number;
+  progress_type: string;
+}
+
+export interface DailyReadingSummary {
+  date: string;
+  books: BookSessionSummary[];
+}
 
 export interface ReadingGoal {
   pagesPerDay: number;

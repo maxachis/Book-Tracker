@@ -1,9 +1,10 @@
-import type { Book, UserSettings, View, SortConfig, Statistics, DailyGoal } from "../types";
+import type { Book, UserSettings, View, SortConfig, Statistics, DailyGoal, DailyReadingSummary } from "../types";
 import {
   getActiveBooks,
   getCompletedBooks,
   getAllBooks,
   getSettings,
+  getDailyReadingSummary,
 } from "../services/database";
 import { calculateStatistics } from "../services/calculations";
 
@@ -21,6 +22,7 @@ class AppState {
   isLoading = $state(true);
   error = $state<string | null>(null);
   dailyGoals = $state<Map<string, DailyGoal>>(new Map());
+  dailySummary = $state<DailyReadingSummary>({ date: "", books: [] });
 
   get statistics(): Statistics {
     const allBooks = [...this.books, ...this.completedBooks];
@@ -61,14 +63,17 @@ class AppState {
     this.isLoading = true;
     this.error = null;
     try {
-      const [activeBooks, completedBooks, settings] = await Promise.all([
+      const today = new Date().toISOString().slice(0, 10);
+      const [activeBooks, completedBooks, settings, dailySummary] = await Promise.all([
         getActiveBooks(),
         getCompletedBooks(),
         getSettings(),
+        getDailyReadingSummary(today),
       ]);
       this.books = activeBooks;
       this.completedBooks = completedBooks;
       this.settings = settings;
+      this.dailySummary = dailySummary;
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to load data";
     } finally {
@@ -76,14 +81,26 @@ class AppState {
     }
   }
 
+  async refreshDailySummary() {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      this.dailySummary = await getDailyReadingSummary(today);
+    } catch (e) {
+      this.error = e instanceof Error ? e.message : "Failed to refresh daily summary";
+    }
+  }
+
   async refreshBooks() {
     try {
-      const [activeBooks, completedBooks] = await Promise.all([
+      const today = new Date().toISOString().slice(0, 10);
+      const [activeBooks, completedBooks, dailySummary] = await Promise.all([
         getActiveBooks(),
         getCompletedBooks(),
+        getDailyReadingSummary(today),
       ]);
       this.books = activeBooks;
       this.completedBooks = completedBooks;
+      this.dailySummary = dailySummary;
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to refresh books";
     }

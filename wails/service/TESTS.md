@@ -22,3 +22,7 @@
 - **TestCSVRoundTrip**: `ParseCSVBooks(GenerateCSVExport(books))` yields equivalent records for books with and without optional fields.
 - **TestCheckDuplicates_Flags**: Case-insensitive title+author matches (including both-nil authors) are reported; mismatched authors and unique titles are not.
 - **TestCheckDuplicates_EmptyInputs**: Empty records/existing slices return an empty slice without error.
+- **TestUpdateBook_RecordsReadingSession**: After an `UpdateBook` call that increases progress, a session row is created for today with the correct delta.
+- **TestUpdateBook_AccumulatesSessionOnSameDay**: Two progress updates on the same day sum their deltas into a single session row.
+- **TestUpdateBook_NegativeDeltaNotRecorded**: Progress decreases (re-reads, corrections) are not subtracted from the day's session.
+- **TestUpdateBook_NoSessionWhenProgressUnchanged**: A zero-delta update (no `current_progress` change) does not create a session row.

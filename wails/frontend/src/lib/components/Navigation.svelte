@@ -5,6 +5,7 @@
   const navItems: { view: View; label: string; icon: string }[] = [
     { view: "active", label: "Reading", icon: "\u{25CB}" },
     { view: "completed", label: "Finished", icon: "\u{25C7}" },
+    { view: "today", label: "Today", icon: "\u{25D1}" },
     { view: "settings", label: "Settings", icon: "\u{25E6}" },
     { view: "import-export", label: "Import / Export", icon: "\u{25A1}" },
   ];

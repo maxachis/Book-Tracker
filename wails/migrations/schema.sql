@@ -22,3 +22,12 @@ CREATE TABLE IF NOT EXISTS user_settings (
 -- Migration 3: seed default settings
 INSERT OR IGNORE INTO user_settings (id, reading_start_hour, reading_end_hour)
 VALUES (1, 8, 22);
+
+-- Migration 4: reading sessions (one row per book per day)
+CREATE TABLE IF NOT EXISTS reading_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    book_id TEXT NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    date TEXT NOT NULL,
+    progress_delta INTEGER NOT NULL DEFAULT 0,
+    UNIQUE(book_id, date)
+);

@@ -22,6 +22,10 @@ export function GenerateCSVExport(arg1) {
   return window['go']['main']['App']['GenerateCSVExport'](arg1);
 }
 
+export function GetDailyReadingSummary(arg1) {
+  return window['go']['main']['App']['GetDailyReadingSummary'](arg1);
+}
+
 export function GetSettings() {
   return window['go']['main']['App']['GetSettings']();
 }

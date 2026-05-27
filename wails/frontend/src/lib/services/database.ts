@@ -8,6 +8,7 @@ import {
   MarkBookComplete,
   GetSettings,
   UpdateSettings,
+  GetDailyReadingSummary,
 } from "../../../wailsjs/go/main/App";
 import type {
   Book,
@@ -15,6 +16,7 @@ import type {
   UpdateBookRequest,
   UserSettings,
   UpdateSettingsRequest,
+  DailyReadingSummary,
 } from "../types";
 
 function normalizeBook(b: any): Book {
@@ -84,4 +86,17 @@ export async function updateSettings(
 ): Promise<UserSettings> {
   const settings = await UpdateSettings(request as any);
   return normalizeSettings(settings);
+}
+
+export async function getDailyReadingSummary(date: string): Promise<DailyReadingSummary> {
+  const raw = await GetDailyReadingSummary(date);
+  return {
+    date: raw.date,
+    books: (raw.books ?? []).map((b: any) => ({
+      book_id: b.book_id,
+      title: b.title,
+      progress_delta: b.progress_delta,
+      progress_type: b.progress_type,
+    })),
+  };
 }

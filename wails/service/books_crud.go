@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"time"
 
 	"github.com/maxachis/book-tracker/wails/model"
 )
@@ -38,6 +39,8 @@ func (s *Service) UpdateBook(req model.UpdateBookRequest) (model.Book, error) {
 		return model.Book{}, err
 	}
 
+	prevProgress := existing.CurrentProgress
+
 	if req.Title != nil {
 		existing.Title = *req.Title
 	}
@@ -72,6 +75,13 @@ func (s *Service) UpdateBook(req model.UpdateBookRequest) (model.Book, error) {
 	if err := s.Store.UpdateBook(existing); err != nil {
 		return model.Book{}, err
 	}
+
+	if delta := existing.CurrentProgress - prevProgress; delta > 0 {
+		date := time.Now().UTC().Format("2006-01-02")
+		// Best-effort: session recording failure doesn't block the update.
+		_ = s.Store.UpsertReadingSession(existing.ID, date, delta)
+	}
+
 	return existing, nil
 }
 

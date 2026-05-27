@@ -19,7 +19,7 @@ func TestUpdateBook_RecordsReadingSession(t *testing.T) {
 		t.Fatalf("update: %v", err)
 	}
 
-	today := time.Now().UTC().Format("2006-01-02")
+	today := time.Now().Local().Format("2006-01-02")
 	summary, err := svc.Store.GetDailyReadingSummary(today)
 	if err != nil {
 		t.Fatalf("summary: %v", err)
@@ -48,7 +48,7 @@ func TestUpdateBook_AccumulatesSessionOnSameDay(t *testing.T) {
 		t.Fatalf("second update: %v", err)
 	}
 
-	today := time.Now().UTC().Format("2006-01-02")
+	today := time.Now().Local().Format("2006-01-02")
 	summary, err := svc.Store.GetDailyReadingSummary(today)
 	if err != nil {
 		t.Fatalf("summary: %v", err)
@@ -76,7 +76,7 @@ func TestUpdateBook_NegativeDeltaNotRecorded(t *testing.T) {
 		t.Fatalf("backward: %v", err)
 	}
 
-	today := time.Now().UTC().Format("2006-01-02")
+	today := time.Now().Local().Format("2006-01-02")
 	summary, err := svc.Store.GetDailyReadingSummary(today)
 	if err != nil {
 		t.Fatalf("summary: %v", err)
@@ -100,7 +100,7 @@ func TestUpdateBook_NoSessionWhenProgressUnchanged(t *testing.T) {
 		t.Fatalf("update: %v", err)
 	}
 
-	today := time.Now().UTC().Format("2006-01-02")
+	today := time.Now().Local().Format("2006-01-02")
 	summary, err := svc.Store.GetDailyReadingSummary(today)
 	if err != nil {
 		t.Fatalf("summary: %v", err)

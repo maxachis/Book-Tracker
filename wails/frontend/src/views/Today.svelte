@@ -1,5 +1,6 @@
 <script lang="ts">
   import { appState } from "../lib/stores/state.svelte";
+  import { localDateISO } from "../lib/services/dates";
 
   const progressLabel: Record<string, string> = {
     page: "pages",
@@ -18,7 +19,7 @@
     });
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateISO();
 
   $effect(() => {
     if (appState.currentView === "today") {

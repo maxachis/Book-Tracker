@@ -1,3 +1,12 @@
+/** Returns today's date as a YYYY-MM-DD string in the local timezone. */
+export function localDateISO(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 /**
  * Format a date string for display, handling YYYY-MM-DD strings as local dates
  * to avoid timezone shift (where UTC midnight becomes the previous day in western timezones).

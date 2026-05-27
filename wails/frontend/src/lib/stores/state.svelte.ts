@@ -7,6 +7,7 @@ import {
   getDailyReadingSummary,
 } from "../services/database";
 import { calculateStatistics } from "../services/calculations";
+import { localDateISO } from "../services/dates";
 
 class AppState {
   books = $state<Book[]>([]);
@@ -63,7 +64,7 @@ class AppState {
     this.isLoading = true;
     this.error = null;
     try {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = localDateISO();
       const [activeBooks, completedBooks, settings, dailySummary] = await Promise.all([
         getActiveBooks(),
         getCompletedBooks(),
@@ -83,7 +84,7 @@ class AppState {
 
   async refreshDailySummary() {
     try {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = localDateISO();
       this.dailySummary = await getDailyReadingSummary(today);
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to refresh daily summary";
@@ -92,7 +93,7 @@ class AppState {
 
   async refreshBooks() {
     try {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = localDateISO();
       const [activeBooks, completedBooks, dailySummary] = await Promise.all([
         getActiveBooks(),
         getCompletedBooks(),

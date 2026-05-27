@@ -77,7 +77,7 @@ func (s *Service) UpdateBook(req model.UpdateBookRequest) (model.Book, error) {
 	}
 
 	if delta := existing.CurrentProgress - prevProgress; delta > 0 {
-		date := time.Now().UTC().Format("2006-01-02")
+		date := time.Now().Local().Format("2006-01-02")
 		// Best-effort: session recording failure doesn't block the update.
 		_ = s.Store.UpsertReadingSession(existing.ID, date, delta)
 	}

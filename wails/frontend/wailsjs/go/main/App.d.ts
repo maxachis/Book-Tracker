@@ -24,6 +24,8 @@ export function ListCompletedBooks():Promise<Array<model.Book>>;
 
 export function MarkBookComplete(arg1:string):Promise<model.Book>;
 
+export function MarkBookIncomplete(arg1:string):Promise<model.Book>;
+
 export function NowTimestamp():Promise<string>;
 
 export function OpenCSVFile():Promise<string>;

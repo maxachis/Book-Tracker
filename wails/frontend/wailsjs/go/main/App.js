@@ -46,6 +46,10 @@ export function MarkBookComplete(arg1) {
   return window['go']['main']['App']['MarkBookComplete'](arg1);
 }
 
+export function MarkBookIncomplete(arg1) {
+  return window['go']['main']['App']['MarkBookIncomplete'](arg1);
+}
+
 export function NowTimestamp() {
   return window['go']['main']['App']['NowTimestamp']();
 }

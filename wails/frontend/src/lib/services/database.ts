@@ -6,6 +6,7 @@ import {
   UpdateBook,
   DeleteBook,
   MarkBookComplete,
+  MarkBookIncomplete,
   GetSettings,
   UpdateSettings,
   GetDailyReadingSummary,
@@ -73,6 +74,11 @@ export async function deleteBook(id: string): Promise<void> {
 
 export async function markBookComplete(id: string): Promise<Book> {
   const book = await MarkBookComplete(id);
+  return normalizeBook(book);
+}
+
+export async function markBookIncomplete(id: string): Promise<Book> {
+  const book = await MarkBookIncomplete(id);
   return normalizeBook(book);
 }
 

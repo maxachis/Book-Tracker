@@ -12,6 +12,7 @@
     onDelete: (book: Book) => void;
     onProgressUpdate: (book: Book, progress: number) => void;
     onMarkComplete?: (book: Book) => void;
+    onMarkIncomplete?: (book: Book) => void;
     emptyMessage?: string;
   }
 
@@ -24,6 +25,7 @@
     onDelete,
     onProgressUpdate,
     onMarkComplete,
+    onMarkIncomplete,
     emptyMessage = "No books found",
   }: Props = $props();
 </script>
@@ -46,6 +48,7 @@
           {onDelete}
           {onProgressUpdate}
           {onMarkComplete}
+          {onMarkIncomplete}
         />
       {/each}
     </div>

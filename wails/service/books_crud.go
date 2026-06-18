@@ -101,6 +101,23 @@ func (s *Service) MarkBookComplete(id string) (model.Book, error) {
 	return b, nil
 }
 
+// MarkBookIncomplete clears completed_at and decrements current_progress by
+// one so the auto-complete trigger in UpdateBook doesn't immediately re-fire.
+func (s *Service) MarkBookIncomplete(id string) (model.Book, error) {
+	b, err := s.Store.GetBook(id)
+	if err != nil {
+		return model.Book{}, err
+	}
+	b.CompletedAt = nil
+	if b.CurrentProgress > 0 {
+		b.CurrentProgress--
+	}
+	if err := s.Store.UpdateBook(b); err != nil {
+		return model.Book{}, err
+	}
+	return b, nil
+}
+
 // ValidateProgressUpdate mirrors the Rust validate_progress_update:
 // progress must be non-negative and not exceed total.
 func ValidateProgressUpdate(current, total int) error {

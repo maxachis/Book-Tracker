@@ -69,6 +69,10 @@ func (a *App) MarkBookComplete(id string) (model.Book, error) {
 	return a.service.MarkBookComplete(id)
 }
 
+func (a *App) MarkBookIncomplete(id string) (model.Book, error) {
+	return a.service.MarkBookIncomplete(id)
+}
+
 func (a *App) GetSettings() (model.UserSettings, error) {
 	return a.service.GetSettings()
 }

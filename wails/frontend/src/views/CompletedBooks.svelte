@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Book, CreateBookRequest, UpdateBookRequest, SortConfig } from "../lib/types";
   import { appState } from "../lib/stores/state.svelte";
-  import { updateBook, deleteBook } from "../lib/services/database";
+  import { updateBook, deleteBook, markBookIncomplete } from "../lib/services/database";
   import BookList from "../lib/components/BookList.svelte";
   import BookForm from "../lib/components/BookForm.svelte";
 
@@ -59,6 +59,11 @@
     await appState.refreshBooks();
   }
 
+  async function handleMarkIncomplete(book: Book) {
+    await markBookIncomplete(book.id);
+    await appState.refreshBooks();
+  }
+
   function handleCancel() {
     showForm = false;
     editingBook = undefined;
@@ -89,6 +94,7 @@
     onEdit={handleEdit}
     onDelete={handleDelete}
     onProgressUpdate={handleProgressUpdate}
+    onMarkIncomplete={handleMarkIncomplete}
     emptyMessage="No completed books yet. Keep reading!"
   />
 </div>

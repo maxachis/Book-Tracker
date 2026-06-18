@@ -134,3 +134,31 @@ func TestMarkBookComplete(t *testing.T) {
 		t.Fatal("expected completed_at set")
 	}
 }
+
+func TestMarkBookIncomplete(t *testing.T) {
+	svc := newTestService(t)
+	b, err := svc.CreateBook(model.CreateBookRequest{Title: "T", TotalProgress: 250, ProgressType: "page"})
+	if err != nil {
+		t.Fatalf("create: %v", err)
+	}
+	if _, err := svc.MarkBookComplete(b.ID); err != nil {
+		t.Fatalf("complete: %v", err)
+	}
+	reopened, err := svc.MarkBookIncomplete(b.ID)
+	if err != nil {
+		t.Fatalf("incomplete: %v", err)
+	}
+	if reopened.CompletedAt != nil {
+		t.Fatalf("expected completed_at cleared, got %v", *reopened.CompletedAt)
+	}
+	if reopened.CurrentProgress >= reopened.TotalProgress {
+		t.Fatalf("expected current_progress < total_progress after reopen, got %d/%d", reopened.CurrentProgress, reopened.TotalProgress)
+	}
+}
+
+func TestMarkBookIncomplete_NotFound(t *testing.T) {
+	svc := newTestService(t)
+	if _, err := svc.MarkBookIncomplete("missing"); err == nil {
+		t.Fatal("expected not-found error")
+	}
+}

@@ -13,9 +13,10 @@
     onDelete: (book: Book) => void;
     onProgressUpdate: (book: Book, progress: number) => void;
     onMarkComplete?: (book: Book) => void;
+    onMarkIncomplete?: (book: Book) => void;
   }
 
-  let { book, settings, onEdit, onDelete, onProgressUpdate, onMarkComplete }: Props =
+  let { book, settings, onEdit, onDelete, onProgressUpdate, onMarkComplete, onMarkIncomplete }: Props =
     $props();
 
   // svelte-ignore state_referenced_locally
@@ -236,6 +237,11 @@
     {#if !isCompleted && onMarkComplete}
       <button class="btn btn-complete" onclick={() => onMarkComplete(book)}>
         Mark Complete
+      </button>
+    {/if}
+    {#if isCompleted && onMarkIncomplete}
+      <button class="btn btn-reopen" onclick={() => onMarkIncomplete(book)}>
+        Mark Incomplete
       </button>
     {/if}
     <button class="btn btn-delete" onclick={handleDelete}>Delete</button>
@@ -532,6 +538,17 @@
   .btn-complete:hover {
     background: rgba(122, 182, 122, 0.08);
     border-color: rgba(122, 182, 122, 0.4);
+  }
+
+  .btn-reopen {
+    background: transparent;
+    border-color: rgba(180, 140, 80, 0.2);
+    color: var(--accent-amber);
+  }
+
+  .btn-reopen:hover {
+    background: rgba(212, 164, 74, 0.08);
+    border-color: rgba(212, 164, 74, 0.4);
   }
 
   .btn-delete {

@@ -2,7 +2,9 @@
   import { flip } from "svelte/animate";
   import type { Book, DailyGoal } from "../types";
   import ProgressBar from "./ProgressBar.svelte";
-  import { getProgressPercentage, dailyGoalPercentage } from "../services/calculations";
+  import { getProgressPercentage, dailyGoalPercentage, tomorrowGoalAmount } from "../services/calculations";
+  import { amountUnitLabel, dueUnitLabel, formatCountdown } from "../services/countdown";
+  import { dueClock } from "../stores/dueClock.svelte";
   import { moveItem } from "../services/ordering";
   import { formatLocalDate } from "../services/dates";
 
@@ -10,12 +12,32 @@
     books: Book[];
     selectedId: string | null;
     getDailyGoal: (book: Book) => DailyGoal;
+    /** Hour (local) the reading day ends; the next-due countdown runs to it. */
+    endHour: number;
     onSelect: (bookId: string) => void;
     /** Called with the full new order of book IDs after a drag or Alt+Arrow move. */
     onReorder?: (bookIds: string[]) => void;
   }
 
-  let { books, selectedId, getDailyGoal, onSelect, onReorder }: Props = $props();
+  let { books, selectedId, getDailyGoal, endHour, onSelect, onReorder }: Props = $props();
+
+  const MS_PER_SECOND = 1000;
+
+  $effect(() => dueClock.subscribe());
+
+  function isGoalMet(book: Book): boolean {
+    return book.current_progress >= getDailyGoal(book).end;
+  }
+
+  function secondsUntilNextDue(book: Book): number | null {
+    const deadline = dueClock.deadlineFor({
+      bookId: book.id,
+      remaining: getDailyGoal(book).end - book.current_progress,
+      endHour,
+      progressType: book.progress_type,
+    });
+    return deadline ? (deadline.getTime() - dueClock.now.getTime()) / MS_PER_SECOND : null;
+  }
 
   /** Pointer travel before a press becomes a drag, so click jitter still selects. */
   const DRAG_THRESHOLD_PX = 5;
@@ -112,24 +134,43 @@
 </script>
 
 {#snippet itemBody(book: Book)}
-  {@const overall = getProgressPercentage(book)}
-  {@const daily = dailyGoalPercentage(book.current_progress, getDailyGoal(book))}
   <span class="item-header">
     <span class="item-title">{book.title}</span>
     {#if book.target_date}
       <span class="item-target" title="Target date">{formatLocalDate(book.target_date)}</span>
     {/if}
   </span>
-  <span class="bar-row">
-    <span class="bar-label">Overall</span>
-    <span class="bar"><ProgressBar percentage={overall} showLabel={false} /></span>
-    <span class="bar-value">{Math.round(overall)}%</span>
-  </span>
-  <span class="bar-row">
-    <span class="bar-label">Today</span>
-    <span class="bar"><ProgressBar percentage={daily} showLabel={false} /></span>
-    <span class="bar-value">{Math.round(daily)}%</span>
-  </span>
+  {#if isGoalMet(book)}
+    {@const overall = getProgressPercentage(book)}
+    <span class="bar-row">
+      <span class="bar-label">Overall</span>
+      <span class="bar"><ProgressBar percentage={overall} showLabel={false} /></span>
+      <span class="bar-value">{Math.round(overall)}%</span>
+    </span>
+    <span class="status-row">
+      <span class="goal-met-badge"><span aria-hidden="true">&#10003;</span> Today's goal met</span>
+      <span class="status-metric" data-metric="tomorrow">
+        <span class="label">Tomorrow</span>
+        <span class="value">{tomorrowGoalAmount({ book, today: dueClock.now })} {amountUnitLabel(book.progress_type)}</span>
+      </span>
+    </span>
+  {:else}
+    {@const daily = dailyGoalPercentage(book.current_progress, getDailyGoal(book))}
+    {@const nextDue = secondsUntilNextDue(book)}
+    <span class="bar-row">
+      <span class="bar-label">Today</span>
+      <span class="bar"><ProgressBar percentage={daily} showLabel={false} /></span>
+      <span class="bar-value">{Math.round(daily)}%</span>
+    </span>
+    {#if nextDue !== null}
+      <span class="status-row">
+        <span class="status-metric" data-metric="next-due">
+          <span class="label">Next {dueUnitLabel(book.progress_type)}</span>
+          <span class="value">{formatCountdown(nextDue)}</span>
+        </span>
+      </span>
+    {/if}
+  {/if}
 {/snippet}
 
 <nav class="book-sidebar" aria-label="Books">
@@ -140,6 +181,7 @@
           type="button"
           class="sidebar-item"
           class:selected={book.id === selectedId}
+          class:goal-met={isGoalMet(book)}
           class:placeholder={drag?.active && drag.id === book.id}
           class:reorderable={!!onReorder}
           data-id={book.id}
@@ -266,6 +308,44 @@
     flex-shrink: 0;
     font-size: 0.72rem;
     color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Today's goal is done: a green edge, kept even when selected. */
+  .sidebar-item.goal-met {
+    border-left-color: var(--accent-green);
+  }
+
+  .status-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.6rem;
+    font-size: 0.7rem;
+  }
+
+  .goal-met-badge {
+    color: var(--accent-green);
+    font-weight: 600;
+  }
+
+  .status-metric {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    margin-left: auto;
+  }
+
+  .status-metric .label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+  }
+
+  .status-metric .value {
+    color: var(--gold-300);
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
 

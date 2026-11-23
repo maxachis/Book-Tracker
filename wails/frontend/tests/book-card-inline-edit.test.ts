@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render } from "@testing-library/svelte";
 import BookCard from "../src/lib/components/BookCard.svelte";
 import type { Book, UserSettings } from "../src/lib/types";
+import { appState } from "../src/lib/stores/state.svelte";
 
 function createBook(overrides: Partial<Book> = {}): Book {
   return {
@@ -76,10 +77,46 @@ describe("BookCard inline editing", () => {
     expect(onFieldUpdate).toHaveBeenCalledWith(expect.anything(), { total_progress: 250 });
   });
 
-  it("edits the target date in place", async () => {
+  // The target date is picked from a calendar rather than typed.
+  it("opens a calendar on the book's month and saves the day picked", async () => {
     const { getByRole, onFieldUpdate } = renderCard();
-    await editField(getByRole, "Target date", "2027-01-15");
-    expect(onFieldUpdate).toHaveBeenCalledWith(expect.anything(), { target_date: "2027-01-15" });
+    await fireEvent.click(getByRole("button", { name: "Edit Target date" }));
+    const day = document.querySelector<HTMLElement>('[data-date="2026-12-15"]');
+    expect(day).toBeTruthy();
+    await fireEvent.click(day!);
+    expect(onFieldUpdate).toHaveBeenCalledWith(expect.anything(), { target_date: "2026-12-15" });
+    expect(document.querySelector("[data-date]")).toBeNull();
+  });
+
+  it("closes the calendar on Escape without saving", async () => {
+    const { getByRole, onFieldUpdate } = renderCard();
+    await fireEvent.click(getByRole("button", { name: "Edit Target date" }));
+    await fireEvent.keyDown(document.querySelector<HTMLElement>('[data-date="2026-12-31"]')!, { key: "Escape" });
+    expect(document.querySelector("[data-date]")).toBeNull();
+    expect(onFieldUpdate).not.toHaveBeenCalled();
+  });
+
+  it("closes the calendar when clicking elsewhere", async () => {
+    const { getByRole } = renderCard();
+    await fireEvent.click(getByRole("button", { name: "Edit Target date" }));
+    await fireEvent.pointerDown(document.body);
+    expect(document.querySelector("[data-date]")).toBeNull();
+  });
+
+  // So the reader can see which days other books are already due, and spread them out.
+  it("marks days that are already another reading book's target date", async () => {
+    appState.books = [
+      createBook(),
+      createBook({ id: "book-2", title: "Dune", target_date: "2026-12-20" }),
+    ];
+    const { getByRole } = renderCard();
+    await fireEvent.click(getByRole("button", { name: "Edit Target date" }));
+    const other = document.querySelector<HTMLElement>('[data-date="2026-12-20"]')!;
+    expect(other.classList.contains("marked")).toBe(true);
+    expect(other.getAttribute("title")).toContain("Dune");
+    // The book's own date is shown as selected, not as "taken".
+    expect(document.querySelector('[data-date="2026-12-31"]')!.classList.contains("marked")).toBe(false);
+    appState.books = [];
   });
 
   it("offers to add a target date when there is none", () => {

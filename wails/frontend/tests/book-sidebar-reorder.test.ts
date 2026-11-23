@@ -26,6 +26,7 @@ function renderSidebar() {
     props: {
       books: ["a", "b", "c"].map(createBook),
       selectedId: null,
+      endHour: 22,
       getDailyGoal: () => ({ start: 10, end: 20 }),
       onSelect,
       onReorder,

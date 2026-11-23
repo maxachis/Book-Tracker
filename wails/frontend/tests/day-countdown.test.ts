@@ -3,6 +3,7 @@ import { render } from "@testing-library/svelte";
 import { flushSync } from "svelte";
 import DayCountdown from "../src/lib/components/DayCountdown.svelte";
 import type { Book, ProgressType } from "../src/lib/types";
+import { resetDueClock } from "../src/lib/stores/dueClock.svelte";
 
 function makeBook(progressType: ProgressType = "page"): Book {
   return {
@@ -36,6 +37,7 @@ const value = (container: HTMLElement, name: string) =>
   container.querySelector(`[data-metric="${name}"] .countdown-value`)?.textContent;
 
 beforeEach(() => {
+  resetDueClock();
   vi.useFakeTimers();
   vi.setSystemTime(new Date(2026, 10, 23, 20, 0, 0)); // 8:00 PM local
 });

@@ -1,5 +1,9 @@
 <script lang="ts">
   import type { Book, ProgressType, CreateBookRequest, UpdateBookRequest } from "../types";
+  import DateField from "./DateField.svelte";
+  import { appState } from "../stores/state.svelte";
+  import { groupTargetDates } from "../services/calendar";
+  import { formatLocalDate } from "../services/dates";
 
   interface Props {
     book?: Book;
@@ -23,6 +27,8 @@
   let error = $state<string | null>(null);
 
   const isEditing = $derived(!!book);
+  /** Days other reading books already aim for, shown on the calendar. */
+  const otherBooksTargetDates = $derived(groupTargetDates(appState.books, { excludeId: book?.id ?? "" }));
 
   async function handleSubmit(e: Event) {
     e.preventDefault();
@@ -116,8 +122,17 @@
   </div>
 
   <div class="form-group">
-    <label for="targetDate">Target Completion Date</label>
-    <input id="targetDate" type="date" bind:value={targetDate} />
+    <span class="field-label">Target Completion Date</span>
+    <DateField
+      variant="input"
+      value={targetDate || null}
+      label="Target completion date"
+      placeholder="No target date"
+      format={formatLocalDate}
+      markedDates={otherBooksTargetDates}
+      onSave={(iso) => (targetDate = iso)}
+      onClear={() => (targetDate = "")}
+    />
   </div>
 
   <div class="form-actions">
@@ -186,7 +201,8 @@
     flex: 1;
   }
 
-  label {
+  label,
+  .field-label {
     display: block;
     margin-bottom: 0.35rem;
     font-size: 0.7rem;

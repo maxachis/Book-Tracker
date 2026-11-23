@@ -5,6 +5,7 @@
   import DayCountdown from "./DayCountdown.svelte";
   import EditableField from "./EditableField.svelte";
   import Dropdown from "./Dropdown.svelte";
+  import DateField from "./DateField.svelte";
   import {
     formatProgress,
     getProgressPercentage,
@@ -14,6 +15,7 @@
   } from "../services/calculations";
   import { appState } from "../stores/state.svelte";
   import { formatLocalDate } from "../services/dates";
+  import { groupTargetDates } from "../services/calendar";
 
   interface Props {
     book: Book;
@@ -49,6 +51,8 @@
   const percentage = $derived(getProgressPercentage(book));
   const progressText = $derived(formatProgress(book));
   const isCompleted = $derived(!!book.completed_at);
+  /** Days other reading books already aim for, shown on the target-date calendar. */
+  const otherBooksTargetDates = $derived(groupTargetDates(appState.books, { excludeId: book.id }));
   const progressLabel = $derived(getProgressLabel(book.progress_type));
   const quickAddLabel = $derived.by(() => {
     if (book.progress_type === "percentage") return "+1%";
@@ -296,13 +300,13 @@
     {#if onFieldUpdate && !isCompleted}
       <span class="meta-item">
         <span class="meta-icon">&#9670;</span>
-        <EditableField
-          value={book.target_date ?? ""}
+        <DateField
+          value={book.target_date}
           label="Target date"
-          inputType="date"
           placeholder="Add target date"
           format={(d) => `Target: ${formatLocalDate(d)}`}
-          onSave={(target_date) => (target_date ? saveField({ target_date }) : undefined)}
+          markedDates={otherBooksTargetDates}
+          onSave={(target_date) => saveField({ target_date })}
         />
       </span>
     {:else if book.target_date}

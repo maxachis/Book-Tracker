@@ -167,3 +167,23 @@ export function dailyGoalPercentage(currentProgress: number, goal: DailyGoal): n
   if (range <= 0) return 100;
   return Math.min(100, Math.max(0, ((currentProgress - goal.start) / range) * 100));
 }
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/**
+ * What tomorrow's goal will ask for: what's left spread evenly over tomorrow
+ * through the target date (everything, if the target is today or past), or the
+ * same tenth-of-what's-left fallback as today's default goal without a target.
+ */
+export function tomorrowGoalAmount({ book, today }: { book: Book; today: Date }): number {
+  const remaining = Math.max(0, book.total_progress - book.current_progress);
+  if (remaining === 0) return 0;
+  if (!book.target_date) return Math.max(1, Math.ceil(remaining * DEFAULT_DAILY_GOAL_FRACTION));
+  const [year, month, day] = book.target_date.split("-").map(Number);
+  const target = new Date(year, month - 1, day);
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  // Tomorrow through the target date, inclusive.
+  const daysFromTomorrow = Math.round((target.getTime() - startOfToday.getTime()) / MS_PER_DAY);
+  if (daysFromTomorrow <= 0) return remaining;
+  return Math.ceil(remaining / daysFromTomorrow);
+}

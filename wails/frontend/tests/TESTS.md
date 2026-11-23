@@ -10,6 +10,7 @@ Tests for the reading goal calculation and statistics services.
 - **getProgressLabel**: Tests progress type label mapping (page, location, percentage).
 - **formatProgress**: Tests formatting of progress display strings.
 - **getProgressPercentage**: Tests percentage calculation for book progress.
+- **tomorrowGoalAmount**: Verifies tomorrow's amount spreads what's left over tomorrow through the target date (rounded up), asks for everything when the target is today or past, falls back to a tenth of what's left without a target, and is zero for a finished book.
 
 ## dates.test.ts
 
@@ -42,13 +43,19 @@ Tests for the click-to-edit field used for a book's title, author, end and targe
 
 Tests for the Reading tab's book sidebar.
 
-- **BookSidebar**: Verifies every book is listed by title (no author) with its target date, when set, on the title row, an overall bar and a daily-goal bar, that clicking reports the selected book, and that the selected entry is marked.
+- **BookSidebar**: Verifies every book is listed by title (no author) with its target date, when set, on the title row; that a book short of today's goal shows only today's bar plus a next-page countdown that ticks each second and matches the open card's; that a book whose goal is met is marked as such and shows the overall bar plus tomorrow's amount; that clicking reports the selected book; and that the selected entry is marked.
 
 ## book-card-inline-edit.test.ts
 
 Tests for in-place editing on the book card shown on the Reading tab.
 
-- **BookCard inline editing**: Verifies title, author, end page and target date are edited in place and saved as partial updates, that missing author/target date show an "add" prompt, that the tracking unit (pages/locations/percentage) can be changed, and that no separate Edit button appears.
+- **BookCard inline editing**: Verifies title, author, end page and target date are edited in place and saved as partial updates, that missing author/target date show an "add" prompt, that the tracking unit (pages/locations/percentage) can be changed, and that no separate Edit button appears. The target date is picked from a calendar that opens on the book's month, saves the chosen day, closes on Escape or an outside click without saving, and marks days other reading books already target.
+
+## book-form-date.test.ts
+
+Tests for picking the target date on the book form (used when editing a finished book) with the shared calendar.
+
+- **BookForm target date calendar**: Verifies the picked day is what the form submits, that a set date can be cleared so none is saved (and no clear button appears without one), that opening the calendar doesn't submit the form, and that days other reading books target are marked while the book's own date is not.
 
 ## ordering.test.ts
 
@@ -94,3 +101,23 @@ Tests for the end-of-day countdown math.
 Tests for the countdown row on the book card.
 
 - **DayCountdown**: Verifies it shows the time left until the end of the reading day and until the next unit is due, ticks every second, names the unit for each tracking type, says "Goal met" once today's goal is reached, and stops its clock when removed. The next-due deadline counts down in real time beside a live "1 page every …" pace, and a new deadline starts when the old one passes without progress or when progress is logged. It also shows how much is left for today's goal in the book's own unit (pages, locations or percent), never below zero.
+
+## calendar.test.ts
+
+Tests for the pure calendar helpers behind the date picker.
+
+- **toISODate / parseISODate**: Verifies local YYYY-MM-DD formatting and parsing (local midnight, never UTC, so the day cannot shift) and that the two round-trip.
+- **monthGrid**: Verifies a month always yields six Sunday-first weeks (42 cells), starting on the Sunday on or before the 1st, with adjacent-month days flagged as outside the month, including across year boundaries.
+- **addMonths**: Verifies stepping forward and back, year rollover in both directions, and multi-month deltas.
+- **groupTargetDates**: Verifies books sharing a target date are grouped by date, and that the excluded book and books with no target date are skipped.
+
+## date-picker.test.ts
+
+Tests for the calendar panel used to choose a book's target date.
+
+- **DatePicker month shown**: Verifies it opens on the chosen date's month (or today's when none is chosen) and shows the Su-Sa weekday header.
+- **DatePicker grid**: Verifies 42 day buttons starting on a Sunday with outside-month days flagged, and a full-date accessible label on each.
+- **DatePicker navigation**: Verifies the previous/next buttons change the month, including rolling over the year.
+- **DatePicker selection**: Verifies clicking any day (including an adjacent-month one) reports its ISO date, and that the chosen day and today are marked.
+- **DatePicker marked dates**: Verifies days other books target get the marked class, a "Target for: ..." tooltip and a screen-reader suffix, that unmarked days get none, and that the marker survives on selected or today cells.
+- **DatePicker keyboard**: Verifies a single roving tab stop (selected day, else today, else the 1st), arrow/Page/Home/End movement that follows month boundaries and moves DOM focus, Enter/Space selecting, and Escape calling onClose.

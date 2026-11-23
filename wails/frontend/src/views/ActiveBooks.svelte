@@ -108,6 +108,7 @@
           books={appState.orderedBooks}
           selectedId={selectedBook?.id ?? null}
           getDailyGoal={dailyGoalFor}
+          endHour={appState.settings.reading_end_hour}
           onSelect={(id) => (selectedId = id)}
           onReorder={handleReorder}
         />

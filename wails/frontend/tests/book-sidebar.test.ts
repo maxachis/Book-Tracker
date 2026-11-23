@@ -1,4 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { flushSync } from "svelte";
+import DayCountdown from "../src/lib/components/DayCountdown.svelte";
+import { resetDueClock } from "../src/lib/stores/dueClock.svelte";
 import { fireEvent, render } from "@testing-library/svelte";
 import BookSidebar from "../src/lib/components/BookSidebar.svelte";
 import { formatLocalDate } from "../src/lib/services/dates";
@@ -29,13 +32,32 @@ const goals: Record<string, DailyGoal> = {
   b: { start: 20, end: 30 },
 };
 
-function renderSidebar(selectedId: string | null = null) {
+const END_HOUR = 22;
+
+function renderSidebar(
+  { selectedId = null, books: shown = books }: { selectedId?: string | null; books?: Book[] } = {}
+) {
   const onSelect = vi.fn();
   const result = render(BookSidebar, {
-    props: { books, selectedId, getDailyGoal: (b: Book) => goals[b.id], onSelect },
+    props: { books: shown, selectedId, getDailyGoal: (b: Book) => goals[b.id], onSelect, endHour: END_HOUR },
   });
   return { ...result, onSelect };
 }
+
+function advanceSeconds(seconds: number) {
+  vi.advanceTimersByTime(seconds * 1000);
+  flushSync();
+}
+
+beforeEach(() => {
+  resetDueClock();
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date(2026, 10, 23, 20, 0, 0)); // 8:00 PM local
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("BookSidebar", () => {
   // The sidebar stays compact: the author lives on the full card, not here.
@@ -49,7 +71,7 @@ describe("BookSidebar", () => {
   it("shows the target date on the same row as the title", () => {
     const withDate = [createBook({ id: "a", title: "Dune", target_date: "2026-12-20" })];
     const { container } = render(BookSidebar, {
-      props: { books: withDate, selectedId: null, getDailyGoal: () => goals.a, onSelect: vi.fn() },
+      props: { books: withDate, selectedId: null, getDailyGoal: () => goals.a, onSelect: vi.fn(), endHour: END_HOUR },
     });
     const row = container.querySelector(".item-header");
     expect(row?.querySelector(".item-title")?.textContent).toBe("Dune");
@@ -61,17 +83,53 @@ describe("BookSidebar", () => {
     expect(container.querySelector(".item-target")).toBeNull();
   });
 
-  // Each entry shows both overall progress and today's goal at a glance.
-  it("shows an overall bar and a daily-goal bar for each book", () => {
+  // Until today's goal is met the entry is about today: how far through
+  // today's goal, and how long until the next page is due.
+  it("shows only today's bar and the next-due countdown while today's goal is unmet", () => {
     const { container } = renderSidebar();
-    const items = container.querySelectorAll(".sidebar-item");
-    expect(items).toHaveLength(2);
-    for (const item of items) {
-      expect(item.querySelectorAll(".progress-bar")).toHaveLength(2);
-    }
-    const fills = items[0].querySelectorAll<HTMLElement>(".progress-fill");
-    expect(fills[0].style.width).toBe("50%"); // 50 / 100 overall
-    expect(fills[1].style.width).toBe("50%"); // 10 of 20 into today's range
+    const item = container.querySelector<HTMLElement>('[data-id="a"]')!;
+    expect(item.querySelectorAll(".progress-bar")).toHaveLength(1);
+    expect(item.textContent).toContain("Today");
+    expect(item.textContent).not.toContain("Overall");
+    expect(item.querySelector<HTMLElement>(".progress-fill")!.style.width).toBe("50%"); // 10 of 20
+    // 10 pages left over the 2 hours until 10 PM
+    expect(item.querySelector('[data-metric="next-due"]')!.textContent).toMatch(/Next page\s*00:12:00/);
+    expect(item.classList.contains("goal-met")).toBe(false);
+  });
+
+  it("counts the next-due time down every second", () => {
+    const { container } = renderSidebar();
+    advanceSeconds(60);
+    expect(container.querySelector('[data-id="a"] [data-metric="next-due"]')!.textContent).toContain("00:11:00");
+  });
+
+  // Once today's goal is met the entry looks ahead: the whole book, and
+  // what tomorrow will ask for.
+  it("marks a book whose goal is met and shows overall progress and tomorrow's amount", () => {
+    const { container } = renderSidebar({
+      books: [createBook({ id: "a", current_progress: 60, target_date: "2026-11-27" })],
+    });
+    const item = container.querySelector<HTMLElement>('[data-id="a"]')!;
+    expect(item.classList.contains("goal-met")).toBe(true);
+    expect(item.textContent).toContain("Today's goal met");
+    expect(item.querySelectorAll(".progress-bar")).toHaveLength(1);
+    expect(item.textContent).toContain("Overall");
+    expect(item.querySelector<HTMLElement>(".progress-fill")!.style.width).toBe("60%");
+    expect(item.querySelector('[data-metric="next-due"]')).toBeNull();
+    // 40 left over Nov 24..27
+    expect(item.querySelector('[data-metric="tomorrow"]')!.textContent).toMatch(/Tomorrow\s*10 pages/);
+  });
+
+  // The sidebar and the open card must agree on when the next page is due,
+  // even though the card was opened later.
+  it("shows the same next-due time as the open card", () => {
+    const card = render(DayCountdown, { props: { book: books[0], dailyGoal: goals.a, endHour: END_HOUR } });
+    advanceSeconds(45);
+    const { container } = renderSidebar();
+    const sidebarTime = container.querySelector('[data-id="a"] [data-metric="next-due"] .value')!.textContent;
+    const cardTime = card.container.querySelector('[data-metric="next-due"] .countdown-value')!.textContent;
+    expect(sidebarTime).toBe("00:11:15");
+    expect(cardTime?.trim()).toBe(sidebarTime);
   });
 
   it("reports which book was clicked", async () => {
@@ -81,7 +139,7 @@ describe("BookSidebar", () => {
   });
 
   it("marks the selected book", () => {
-    const { container } = renderSidebar("b");
+    const { container } = renderSidebar({ selectedId: "b" });
     const selected = container.querySelectorAll('[aria-current="true"]');
     expect(selected).toHaveLength(1);
     expect(selected[0].textContent).toContain("Emma");

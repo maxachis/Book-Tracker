@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
+  tomorrowGoalAmount,
   calculateReadingGoal,
   calculateStatistics,
   getProgressLabel,
@@ -340,5 +341,35 @@ describe('getProgressPercentage', () => {
     });
 
     expect(getProgressPercentage(book)).toBe(100);
+  });
+});
+
+// Once today's goal is met, the sidebar previews tomorrow's assignment.
+describe("tomorrowGoalAmount", () => {
+  const today = new Date(2026, 10, 23, 15, 0, 0);
+  const book = (overrides: Partial<Book>): Book => ({
+    id: "t", title: "T", author: null, current_progress: 100, total_progress: 400,
+    progress_type: "page", target_date: null, completed_at: null, created_at: "2026-01-01T00:00:00Z",
+    ...overrides,
+  });
+
+  it("spreads what's left evenly over tomorrow through the target date, rounded up", () => {
+    // 300 left over Nov 24..Dec 3 = 10 days
+    expect(tomorrowGoalAmount({ book: book({ target_date: "2026-12-03" }), today })).toBe(30);
+    expect(tomorrowGoalAmount({ book: book({ target_date: "2026-11-30" }), today })).toBe(43); // 300 / 7
+  });
+
+  it("asks for everything left when the target is today or already past", () => {
+    expect(tomorrowGoalAmount({ book: book({ target_date: "2026-11-23" }), today })).toBe(300);
+    expect(tomorrowGoalAmount({ book: book({ target_date: "2026-11-01" }), today })).toBe(300);
+  });
+
+  // Same fallback as today's default goal when no target date sets a pace.
+  it("uses a tenth of what's left when there is no target date", () => {
+    expect(tomorrowGoalAmount({ book: book({}), today })).toBe(30);
+  });
+
+  it("is zero once the book is finished", () => {
+    expect(tomorrowGoalAmount({ book: book({ current_progress: 400, target_date: "2026-12-03" }), today })).toBe(0);
   });
 });

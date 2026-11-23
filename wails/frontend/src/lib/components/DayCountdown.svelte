@@ -5,10 +5,10 @@
     secondsUntilEndOfDay,
     secondsPerUnitDue,
     dueUnitLabel,
-    nextDueDeadline,
     paceUnitLabel,
     amountUnitLabel,
   } from "../services/countdown";
+  import { dueClock } from "../stores/dueClock.svelte";
 
   interface Props {
     book: Book;
@@ -19,32 +19,15 @@
 
   let { book, dailyGoal, endHour }: Props = $props();
 
-  const TICK_MS = 1000;
-
-  let now = $state(new Date());
-  /** When the next unit is due; fixed once set so it counts down in real time. */
-  let deadline = $state<Date | null>(null);
-
   const remaining = $derived(dailyGoal.end - book.current_progress);
 
-  function scheduleNextDue(from: Date) {
-    deadline = nextDueDeadline({ now: from, endHour, remaining, progressType: book.progress_type });
-  }
+  $effect(() => dueClock.subscribe());
 
-  // A fresh deadline whenever what's left to read changes (progress logged,
-  // goal edited) — and on first show. Reads only props, not the ticking clock.
-  $effect(() => {
-    scheduleNextDue(new Date());
-  });
-
-  $effect(() => {
-    const timer = setInterval(() => {
-      now = new Date();
-      // Missed deadline: start the next one from here rather than sit at zero.
-      if (deadline && now >= deadline) scheduleNextDue(now);
-    }, TICK_MS);
-    return () => clearInterval(timer);
-  });
+  const now = $derived(dueClock.now);
+  /** When the next unit is due; shared with the sidebar so both agree. */
+  const deadline = $derived(
+    dueClock.deadlineFor({ bookId: book.id, remaining, endHour, progressType: book.progress_type })
+  );
 
   const secondsLeft = $derived(secondsUntilEndOfDay({ now, endHour }));
   const nextDueSeconds = $derived(

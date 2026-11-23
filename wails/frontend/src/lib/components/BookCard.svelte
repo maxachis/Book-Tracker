@@ -1,23 +1,46 @@
 <script lang="ts">
-  import type { Book, UserSettings } from "../types";
+  import type { Book, ProgressType, UpdateBookRequest, UserSettings } from "../types";
   import ProgressBar from "./ProgressBar.svelte";
   import ReadingGoals from "./ReadingGoals.svelte";
-  import { formatProgress, getProgressPercentage, calculateReadingGoal, getProgressLabel } from "../services/calculations";
+  import DayCountdown from "./DayCountdown.svelte";
+  import EditableField from "./EditableField.svelte";
+  import Dropdown from "./Dropdown.svelte";
+  import {
+    formatProgress,
+    getProgressPercentage,
+    getProgressLabel,
+    defaultDailyGoal,
+    dailyGoalPercentage as computeDailyGoalPercentage,
+  } from "../services/calculations";
   import { appState } from "../stores/state.svelte";
   import { formatLocalDate } from "../services/dates";
 
   interface Props {
     book: Book;
     settings: UserSettings;
-    onEdit: (book: Book) => void;
+    /** Opens the full edit form. Omit when fields are edited in place. */
+    onEdit?: (book: Book) => void;
+    /** When given, title, author, end and target date become click-to-edit. */
+    onFieldUpdate?: (book: Book, changes: Omit<UpdateBookRequest, "id">) => Promise<void>;
+    /** Open with the title already in edit mode (used for a just-added book). */
+    editTitleOnOpen?: boolean;
     onDelete: (book: Book) => void;
     onProgressUpdate: (book: Book, progress: number) => void;
     onMarkComplete?: (book: Book) => void;
     onMarkIncomplete?: (book: Book) => void;
   }
 
-  let { book, settings, onEdit, onDelete, onProgressUpdate, onMarkComplete, onMarkIncomplete }: Props =
-    $props();
+  let {
+    book,
+    settings,
+    onEdit,
+    onFieldUpdate,
+    editTitleOnOpen = false,
+    onDelete,
+    onProgressUpdate,
+    onMarkComplete,
+    onMarkIncomplete,
+  }: Props = $props();
 
   // svelte-ignore state_referenced_locally
   let progressInput = $state(book.current_progress);
@@ -33,14 +56,30 @@
     return "+1 page";
   });
 
-  function getDefaultDailyGoalEnd(startProgress: number): number {
-    const goal = calculateReadingGoal(book, settings);
-    if (goal && goal.pagesPerDay > 0) {
-      return Math.min(startProgress + Math.ceil(goal.pagesPerDay), book.total_progress);
+  const endLabel = $derived.by(() => {
+    if (book.progress_type === "percentage") return "End percentage";
+    if (book.progress_type === "location") return "End location";
+    return "End page";
+  });
+
+  async function saveField(changes: Omit<UpdateBookRequest, "id">) {
+    try {
+      await onFieldUpdate?.(book, changes);
+    } catch (e) {
+      console.error("Failed to update book:", e);
     }
-    const remaining = book.total_progress - startProgress;
-    const defaultIncrement = Math.max(1, Math.ceil(remaining * 0.1));
-    return Math.min(startProgress + defaultIncrement, book.total_progress);
+  }
+
+  const TRACKING_OPTIONS: { value: ProgressType; label: string }[] = [
+    { value: "page", label: "Pages" },
+    { value: "location", label: "Locations" },
+    { value: "percentage", label: "Percentage" },
+  ];
+
+  function saveTotal(raw: string) {
+    const total = Number(raw);
+    if (!Number.isInteger(total) || total <= 0) return;
+    return saveField({ total_progress: total });
   }
 
   // svelte-ignore state_referenced_locally
@@ -52,10 +91,7 @@
       lastTargetDate = book.target_date;
     }
     if (!isCompleted && (!appState.getDailyGoal(book.id) || targetChanged)) {
-      appState.setDailyGoal(book.id, {
-        start: book.current_progress,
-        end: getDefaultDailyGoalEnd(book.current_progress)
-      });
+      appState.setDailyGoal(book.id, defaultDailyGoal(book, settings));
     }
   });
 
@@ -63,12 +99,7 @@
     appState.getDailyGoal(book.id) ?? { start: book.current_progress, end: book.current_progress }
   );
 
-  const dailyGoalPercentage = $derived.by(() => {
-    const range = dailyGoal.end - dailyGoal.start;
-    if (range <= 0) return 100;
-    const progress = book.current_progress - dailyGoal.start;
-    return Math.min(100, Math.max(0, (progress / range) * 100));
-  });
+  const dailyGoalPercentage = $derived(computeDailyGoalPercentage(book.current_progress, dailyGoal));
 
   const dailyGoalProgressText = $derived(
     `${book.current_progress - dailyGoal.start} / ${dailyGoal.end - dailyGoal.start} ${progressLabel}`
@@ -83,10 +114,7 @@
   }
 
   function resetDailyGoal() {
-    appState.setDailyGoal(book.id, {
-      start: book.current_progress,
-      end: getDefaultDailyGoalEnd(book.current_progress)
-    });
+    appState.setDailyGoal(book.id, defaultDailyGoal(book, settings));
   }
 
   async function submitProgressUpdate(newProgress: number) {
@@ -131,9 +159,29 @@
 <article class="book-card" class:completed={isCompleted}>
   <div class="book-header">
     <div class="title-block">
-      <h3 class="book-title">{book.title}</h3>
-      {#if book.author}
-        <p class="book-author">{book.author}</p>
+      {#if onFieldUpdate}
+        <h3 class="book-title">
+          <EditableField
+            value={book.title}
+            label="Title"
+            required
+            startEditing={editTitleOnOpen}
+            onSave={(title) => saveField({ title })}
+          />
+        </h3>
+        <p class="book-author">
+          <EditableField
+            value={book.author ?? ""}
+            label="Author"
+            placeholder="Add author"
+            onSave={(author) => saveField({ author })}
+          />
+        </p>
+      {:else}
+        <h3 class="book-title">{book.title}</h3>
+        {#if book.author}
+          <p class="book-author">{book.author}</p>
+        {/if}
       {/if}
     </div>
     {#if !isCompleted}
@@ -161,10 +209,36 @@
               disabled={isUpdating}
               onchange={handleProgressChange}
             />
-            <span class="input-suffix">/ {book.total_progress}</span>
+            <span class="input-suffix">
+              /
+              {#if onFieldUpdate}
+                <EditableField
+                  value={String(book.total_progress)}
+                  label={endLabel}
+                  inputType="number"
+                  min={1}
+                  required
+                  onSave={saveTotal}
+                />
+              {:else}
+                {book.total_progress}
+              {/if}
+            </span>
           </div>
         </div>
-        <div class="quick-add-row">
+        <div class="quick-add-row" class:with-tracking={!!onFieldUpdate}>
+          {#if onFieldUpdate}
+            <div class="tracking">
+              <span aria-hidden="true">Tracking</span>
+              <Dropdown
+                label="Tracking"
+                size="sm"
+                options={TRACKING_OPTIONS}
+                value={book.progress_type}
+                onChange={(progress_type) => saveField({ progress_type })}
+              />
+            </div>
+          {/if}
           <button
             class="btn-reset btn-quick-add"
             onclick={handleQuickAdd}
@@ -210,6 +284,7 @@
     </div>
 
     <ReadingGoals {book} {settings} {dailyGoal} />
+    <DayCountdown {book} {dailyGoal} endHour={settings.reading_end_hour} />
   {:else}
     <div class="book-progress">
       <ProgressBar {percentage} />
@@ -218,7 +293,19 @@
   {/if}
 
   <div class="book-meta">
-    {#if book.target_date}
+    {#if onFieldUpdate && !isCompleted}
+      <span class="meta-item">
+        <span class="meta-icon">&#9670;</span>
+        <EditableField
+          value={book.target_date ?? ""}
+          label="Target date"
+          inputType="date"
+          placeholder="Add target date"
+          format={(d) => `Target: ${formatLocalDate(d)}`}
+          onSave={(target_date) => (target_date ? saveField({ target_date }) : undefined)}
+        />
+      </span>
+    {:else if book.target_date}
       <span class="meta-item">
         <span class="meta-icon">&#9670;</span>
         Target: {formatLocalDate(book.target_date)}
@@ -233,7 +320,9 @@
   </div>
 
   <div class="book-actions">
-    <button class="btn btn-edit" onclick={() => onEdit(book)}>Edit</button>
+    {#if onEdit}
+      <button class="btn btn-edit" onclick={() => onEdit(book)}>Edit</button>
+    {/if}
     {#if !isCompleted && onMarkComplete}
       <button class="btn btn-complete" onclick={() => onMarkComplete(book)}>
         Mark Complete
@@ -407,6 +496,24 @@
   .quick-add-row {
     display: flex;
     justify-content: flex-end;
+  }
+
+  .quick-add-row.with-tracking {
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .tracking {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .tracking span {
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
   .btn-quick-add {

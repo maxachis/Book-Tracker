@@ -121,3 +121,5 @@ When running inside a devcontainer, killing processes carelessly will bring down
 ## Mistakes
 
 _(project-specific gotchas — add entries here when you hit a non-obvious pitfall during the port)_
+
+- **[tooling]**: Wails CLI v2.12.0 (built with x/tools v0.30) crashes under Go 1.27 with `internal error: package "embed" without types`, even with `-skipbindings`. To run the app, build it directly: `cd wails/frontend && npm run build`, then `cd wails && go build -tags desktop,production,webkit2_41 -o <out> .` and run the binary. `wails dev` → that direct build.

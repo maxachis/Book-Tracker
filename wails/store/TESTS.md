@@ -20,3 +20,7 @@
 - **TestGetDailyReadingSummary_IncludesBookTitle**: The summary joins books to surface the book title and progress_type.
 - **TestGetDailyReadingSummary_MultipleBooks**: Multiple books with sessions on the same day all appear in the summary.
 - **TestUpsertReadingSession_FileBacked**: Upsert and summary round-trip against a file-backed DB.
+- **TestGetBookOrder_EmptyReturnsNonNilSlice**: With no saved order, GetBookOrder returns an empty non-nil slice so the frontend never receives null.
+- **TestSetBookOrder**: Table-driven: order round-trips as given, a second save fully replaces the first, empty/nil clears the order, and unknown IDs are skipped without failing the save.
+- **TestDeleteBook_RemovesFromBookOrder**: Deleting a book also removes it from the saved order (foreign keys are off, so cascade does not fire).
+- **TestBookOrder_FileBacked_PersistsAcrossReopen**: A saved order survives closing and reopening a file-backed DB.

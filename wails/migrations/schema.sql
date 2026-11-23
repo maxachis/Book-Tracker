@@ -31,3 +31,9 @@ CREATE TABLE IF NOT EXISTS reading_sessions (
     progress_delta INTEGER NOT NULL DEFAULT 0,
     UNIQUE(book_id, date)
 );
+
+-- Migration 5: user-defined display order for books
+CREATE TABLE IF NOT EXISTS book_order (
+    book_id TEXT PRIMARY KEY REFERENCES books(id) ON DELETE CASCADE,
+    position INTEGER NOT NULL
+);

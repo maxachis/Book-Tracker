@@ -22,6 +22,10 @@ export function GenerateCSVExport(arg1) {
   return window['go']['main']['App']['GenerateCSVExport'](arg1);
 }
 
+export function GetBookOrder() {
+  return window['go']['main']['App']['GetBookOrder']();
+}
+
 export function GetDailyReadingSummary(arg1) {
   return window['go']['main']['App']['GetDailyReadingSummary'](arg1);
 }
@@ -64,6 +68,10 @@ export function ParseCSVBooks(arg1) {
 
 export function SaveCSVFile(arg1, arg2) {
   return window['go']['main']['App']['SaveCSVFile'](arg1, arg2);
+}
+
+export function SetBookOrder(arg1) {
+  return window['go']['main']['App']['SetBookOrder'](arg1);
 }
 
 export function UpdateBook(arg1) {

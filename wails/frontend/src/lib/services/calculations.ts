@@ -148,3 +148,22 @@ export function getProgressPercentage(book: Book): number {
   if (book.total_progress === 0) return 0;
   return (book.current_progress / book.total_progress) * 100;
 }
+
+/** Share of what's left that a default daily goal covers when there's no target-date pace. */
+const DEFAULT_DAILY_GOAL_FRACTION = 0.1;
+
+export function defaultDailyGoal(book: Book, settings: UserSettings): DailyGoal {
+  const start = book.current_progress;
+  const goal = calculateReadingGoal(book, settings);
+  const increment =
+    goal && goal.pagesPerDay > 0
+      ? Math.ceil(goal.pagesPerDay)
+      : Math.max(1, Math.ceil((book.total_progress - start) * DEFAULT_DAILY_GOAL_FRACTION));
+  return { start, end: Math.min(start + increment, book.total_progress) };
+}
+
+export function dailyGoalPercentage(currentProgress: number, goal: DailyGoal): number {
+  const range = goal.end - goal.start;
+  if (range <= 0) return 100;
+  return Math.min(100, Math.max(0, ((currentProgress - goal.start) / range) * 100));
+}

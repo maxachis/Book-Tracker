@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { SortField, SortDirection, SortConfig } from "../types";
+  import Dropdown from "./Dropdown.svelte";
 
   interface Props {
     sortConfig: SortConfig;
@@ -8,17 +9,22 @@
 
   let { sortConfig, onSort }: Props = $props();
 
-  const sortOptions: { field: SortField; label: string }[] = [
-    { field: "created_at", label: "Date Added" },
-    { field: "title", label: "Title" },
-    { field: "target_date", label: "Target Date" },
-    { field: "progress", label: "Progress" },
+  const SORT_OPTIONS: { value: SortField; label: string }[] = [
+    { value: "created_at", label: "Date Added" },
+    { value: "title", label: "Title" },
+    { value: "target_date", label: "Target Date" },
+    { value: "progress", label: "Progress" },
   ];
 
-  function handleFieldChange(e: Event) {
-    const target = e.target as HTMLSelectElement;
-    onSort({ field: target.value as SortField, direction: sortConfig.direction });
+  function handleFieldChange(field: SortField) {
+    onSort({ field, direction: sortConfig.direction });
   }
+
+  const DIRECTION_DISPLAY: Record<SortDirection, { arrow: string; name: string }> = {
+    asc: { arrow: "\u2191", name: "Ascending" },
+    desc: { arrow: "\u2193", name: "Descending" },
+  };
+  const direction = $derived(DIRECTION_DISPLAY[sortConfig.direction]);
 
   function toggleDirection() {
     const newDirection: SortDirection =
@@ -28,16 +34,22 @@
 </script>
 
 <div class="sort-controls">
-  <label class="sort-label">
-    <span class="label-text">Sort by</span>
-    <select value={sortConfig.field} onchange={handleFieldChange}>
-      {#each sortOptions as option}
-        <option value={option.field}>{option.label}</option>
-      {/each}
-    </select>
-  </label>
-  <button class="direction-button" onclick={toggleDirection}>
-    {sortConfig.direction === "asc" ? "\u2191 Asc" : "\u2193 Desc"}
+  <div class="sort-label">
+    <span class="label-text" aria-hidden="true">Sort</span>
+    <Dropdown
+      label="Sort"
+      options={SORT_OPTIONS}
+      value={sortConfig.field}
+      onChange={handleFieldChange}
+    />
+  </div>
+  <button
+    class="direction-button"
+    aria-label={direction.name}
+    title={direction.name}
+    onclick={toggleDirection}
+  >
+    {direction.arrow}
   </button>
 </div>
 
@@ -64,36 +76,19 @@
     white-space: nowrap;
   }
 
-  select {
-    padding: 0.3rem 0.5rem;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-sm);
-    background: var(--bg-card);
-    color: var(--text-secondary);
-    font-family: var(--font-body);
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: border-color var(--transition-fast);
-  }
-
-  select:focus {
-    outline: none;
-    border-color: var(--gold-500);
-  }
-
-  select option {
-    background: var(--bg-card);
-    color: var(--text-primary);
-  }
-
   .direction-button {
-    padding: 0.3rem 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.9rem;
+    padding: 0.3rem 0;
     border: 1px solid var(--border-medium);
     background: transparent;
     border-radius: var(--radius-sm);
     cursor: pointer;
     font-family: var(--font-body);
-    font-size: 0.8rem;
+    font-size: 0.9rem;
+    line-height: 1;
     color: var(--text-muted);
     transition: color var(--transition-fast), border-color var(--transition-fast);
   }

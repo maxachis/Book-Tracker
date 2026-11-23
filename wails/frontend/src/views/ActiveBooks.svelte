@@ -1,28 +1,60 @@
 <script lang="ts">
-  import type { Book, CreateBookRequest, UpdateBookRequest } from "../lib/types";
+  import type { Book, CreateBookRequest, DailyGoal, UpdateBookRequest } from "../lib/types";
   import { appState } from "../lib/stores/state.svelte";
   import { createBook, updateBook, deleteBook, markBookComplete } from "../lib/services/database";
-  import BookList from "../lib/components/BookList.svelte";
-  import BookForm from "../lib/components/BookForm.svelte";
+  import { defaultDailyGoal } from "../lib/services/calculations";
+  import BookCard from "../lib/components/BookCard.svelte";
+  import BookSidebar from "../lib/components/BookSidebar.svelte";
 
-  let showForm = $state(false);
-  let editingBook = $state<Book | undefined>(undefined);
+  /** What "Add Book" creates; the reader fills in the real details on the card. */
+  const NEW_BOOK_DEFAULTS: CreateBookRequest = {
+    title: "Untitled Book",
+    author: null,
+    total_progress: 300,
+    progress_type: "page",
+    target_date: null,
+  };
 
-  async function handleSubmit(data: CreateBookRequest | UpdateBookRequest) {
-    if ("id" in data) {
-      await updateBook(data);
-    } else {
-      await createBook(data);
+  let selectedId = $state<string | null>(null);
+  /** The book just created by "Add Book", whose title opens ready to type. */
+  let newBookId = $state<string | null>(null);
+
+  // Until the reader picks one, show the top book. If the picked book is
+  // completed or deleted it drops out of the list and this falls back too.
+  const selectedBook = $derived(
+    appState.orderedBooks.find((b) => b.id === selectedId) ?? appState.orderedBooks[0]
+  );
+
+  // The sidebar shows today's goal for every book, so each needs one even
+  // before its card has been opened.
+  $effect(() => {
+    for (const book of appState.books) {
+      if (!appState.getDailyGoal(book.id)) {
+        appState.setDailyGoal(book.id, defaultDailyGoal(book, appState.settings));
+      }
     }
-    await appState.refreshBooks();
-    showForm = false;
-    editingBook = undefined;
+  });
+
+  function dailyGoalFor(book: Book): DailyGoal {
+    return appState.getDailyGoal(book.id) ?? defaultDailyGoal(book, appState.settings);
   }
 
-  function handleEdit(book: Book) {
-    editingBook = book;
-    showForm = true;
+  /** Keeps the card on the book it's showing when the list order is about to change. */
+  function pinShownBook() {
+    selectedId = selectedBook?.id ?? null;
   }
+
+  function handleReorder(bookIds: string[]) {
+    pinShownBook();
+    void appState.reorderBooks(bookIds);
+  }
+
+  async function handleFieldUpdate(book: Book, changes: Omit<UpdateBookRequest, "id">) {
+    await updateBook({ id: book.id, ...changes });
+    await appState.refreshBooks();
+  }
+
+
 
   async function handleDelete(book: Book) {
     await deleteBook(book.id);
@@ -39,14 +71,14 @@
     await appState.refreshBooks();
   }
 
-  function handleCancel() {
-    showForm = false;
-    editingBook = undefined;
-  }
-
-  function handleAddBook() {
-    editingBook = undefined;
-    showForm = true;
+  // New books have no saved position, so the reading order puts them on top.
+  async function handleAddBook() {
+    const created = await createBook(NEW_BOOK_DEFAULTS);
+    // Mark it before refreshing: its card mounts as soon as it appears in the
+    // list, and only reads "open title for editing" at mount.
+    selectedId = created.id;
+    newBookId = created.id;
+    await appState.refreshBooks();
   }
 </script>
 
@@ -54,31 +86,50 @@
   <div class="header">
     <div class="header-text">
       <h2>Currently Reading</h2>
-      <span class="book-count">{appState.sortedBooks.length} book{appState.sortedBooks.length !== 1 ? "s" : ""}</span>
+      <span class="book-count">{appState.orderedBooks.length} book{appState.orderedBooks.length !== 1 ? "s" : ""}</span>
     </div>
-    <button class="btn-add" onclick={handleAddBook}>
-      <span class="btn-icon">+</span>
-      Add Book
-    </button>
+    <div class="header-actions">
+      <button class="btn-add" onclick={handleAddBook}>
+        <span class="btn-icon">+</span>
+        Add Book
+      </button>
+    </div>
   </div>
 
-  {#if showForm}
-    <div class="form-container">
-      <BookForm book={editingBook} onSubmit={handleSubmit} onCancel={handleCancel} />
+  {#if appState.orderedBooks.length === 0}
+    <div class="empty-state">
+      <span class="empty-icon">&#9671;</span>
+      <p class="empty-message">No active books. Add a book to start tracking your reading.</p>
+    </div>
+  {:else}
+    <div class="reading-layout">
+      <aside class="sidebar">
+        <BookSidebar
+          books={appState.orderedBooks}
+          selectedId={selectedBook?.id ?? null}
+          getDailyGoal={dailyGoalFor}
+          onSelect={(id) => (selectedId = id)}
+          onReorder={handleReorder}
+        />
+      </aside>
+
+      <section class="detail">
+        {#if selectedBook}
+          {#key selectedBook.id}
+            <BookCard
+              book={selectedBook}
+              settings={appState.settings}
+              onFieldUpdate={handleFieldUpdate}
+              editTitleOnOpen={selectedBook.id === newBookId}
+              onDelete={handleDelete}
+              onProgressUpdate={handleProgressUpdate}
+              onMarkComplete={handleMarkComplete}
+            />
+          {/key}
+        {/if}
+      </section>
     </div>
   {/if}
-
-  <BookList
-    books={appState.sortedBooks}
-    settings={appState.settings}
-    sortConfig={appState.sortConfig}
-    onSort={(config) => appState.setSortConfig(config)}
-    onEdit={handleEdit}
-    onDelete={handleDelete}
-    onProgressUpdate={handleProgressUpdate}
-    onMarkComplete={handleMarkComplete}
-    emptyMessage="No active books. Add a book to start tracking your reading."
-  />
 </div>
 
 <style>
@@ -92,6 +143,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 1rem;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
   }
 
   .header-text {
@@ -140,7 +198,51 @@
     background: var(--gold-400);
   }
 
-  .form-container {
-    margin-bottom: 0.5rem;
+  /* Sidebar stays first in the DOM (keyboard order) but sits on the right. */
+  .reading-layout {
+    display: grid;
+    grid-template-columns: 1fr minmax(240px, 300px);
+    grid-template-areas: "detail sidebar";
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  .sidebar {
+    grid-area: sidebar;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+
+  .detail {
+    grid-area: detail;
+    min-width: 0;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    border: 1px dashed var(--border-medium);
+    border-radius: var(--radius-lg);
+  }
+
+  .empty-icon {
+    display: block;
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    opacity: 0.3;
+    margin-bottom: 0.75rem;
+  }
+
+  .empty-message {
+    margin: 0;
+    color: var(--text-muted);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1rem;
   }
 </style>

@@ -67,8 +67,21 @@ func (s *Store) UpdateBook(b model.Book) error {
 }
 
 func (s *Store) DeleteBook(id string) error {
-	if _, err := s.DB.Exec(`DELETE FROM books WHERE id = ?`, id); err != nil {
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return fmt.Errorf("begin delete book %s: %w", id, err)
+	}
+	defer func() { _ = tx.Rollback() }() // no-op after Commit
+
+	// Foreign keys are not enabled, so ON DELETE CASCADE never fires.
+	if _, err := tx.Exec(`DELETE FROM book_order WHERE book_id = ?`, id); err != nil {
+		return fmt.Errorf("delete book order %s: %w", id, err)
+	}
+	if _, err := tx.Exec(`DELETE FROM books WHERE id = ?`, id); err != nil {
 		return fmt.Errorf("delete book %s: %w", id, err)
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit delete book %s: %w", id, err)
 	}
 	return nil
 }

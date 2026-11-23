@@ -1,11 +1,14 @@
-import type { Book, UserSettings, View, SortConfig, Statistics, DailyGoal, DailyReadingSummary } from "../types";
+import type { Book, UserSettings, View, Statistics, DailyGoal, DailyReadingSummary } from "../types";
 import {
   getActiveBooks,
   getCompletedBooks,
   getAllBooks,
   getSettings,
   getDailyReadingSummary,
+  getBookOrder,
+  setBookOrder,
 } from "../services/database";
+import { applyCustomOrder } from "../services/ordering";
 import { calculateStatistics } from "../services/calculations";
 import { localDateISO } from "../services/dates";
 
@@ -19,7 +22,8 @@ class AppState {
     stats_start_date: null,
   });
   currentView = $state<View>("active");
-  sortConfig = $state<SortConfig>({ field: "created_at", direction: "desc" });
+  /** Book IDs in the reader's saved order. */
+  customOrder = $state<string[]>([]);
   isLoading = $state(true);
   error = $state<string | null>(null);
   dailyGoals = $state<Map<string, DailyGoal>>(new Map());
@@ -30,34 +34,9 @@ class AppState {
     return calculateStatistics(allBooks, this.settings.stats_start_date);
   }
 
-  get sortedBooks(): Book[] {
-    return [...this.books].sort((a, b) => {
-      const { field, direction } = this.sortConfig;
-      const multiplier = direction === "asc" ? 1 : -1;
-
-      switch (field) {
-        case "title":
-          return multiplier * a.title.localeCompare(b.title);
-        case "target_date":
-          if (!a.target_date && !b.target_date) return 0;
-          if (!a.target_date) return 1;
-          if (!b.target_date) return -1;
-          return (
-            multiplier *
-            (new Date(a.target_date).getTime() - new Date(b.target_date).getTime())
-          );
-        case "progress":
-          const aPercent = a.current_progress / a.total_progress;
-          const bPercent = b.current_progress / b.total_progress;
-          return multiplier * (aPercent - bPercent);
-        case "created_at":
-        default:
-          return (
-            multiplier *
-            (new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-          );
-      }
-    });
+  /** Reading books in the reader's hand-arranged order (new books first). */
+  get orderedBooks(): Book[] {
+    return applyCustomOrder(this.books, this.customOrder);
   }
 
   async loadData() {
@@ -65,16 +44,18 @@ class AppState {
     this.error = null;
     try {
       const today = localDateISO();
-      const [activeBooks, completedBooks, settings, dailySummary] = await Promise.all([
+      const [activeBooks, completedBooks, settings, dailySummary, customOrder] = await Promise.all([
         getActiveBooks(),
         getCompletedBooks(),
         getSettings(),
         getDailyReadingSummary(today),
+        getBookOrder(),
       ]);
       this.books = activeBooks;
       this.completedBooks = completedBooks;
       this.settings = settings;
       this.dailySummary = dailySummary;
+      this.customOrder = customOrder;
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to load data";
     } finally {
@@ -115,12 +96,18 @@ class AppState {
     }
   }
 
-  setView(view: View) {
-    this.currentView = view;
+  /** Saves a hand-arranged order. */
+  async reorderBooks(bookIds: string[]) {
+    this.customOrder = bookIds;
+    try {
+      await setBookOrder(bookIds);
+    } catch (e) {
+      this.error = e instanceof Error ? e.message : "Failed to save book order";
+    }
   }
 
-  setSortConfig(config: SortConfig) {
-    this.sortConfig = config;
+  setView(view: View) {
+    this.currentView = view;
   }
 
   clearError() {

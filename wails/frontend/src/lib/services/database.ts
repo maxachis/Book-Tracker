@@ -10,6 +10,8 @@ import {
   GetSettings,
   UpdateSettings,
   GetDailyReadingSummary,
+  GetBookOrder,
+  SetBookOrder,
 } from "../../../wailsjs/go/main/App";
 import type {
   Book,
@@ -92,6 +94,14 @@ export async function updateSettings(
 ): Promise<UserSettings> {
   const settings = await UpdateSettings(request as any);
   return normalizeSettings(settings);
+}
+
+export async function getBookOrder(): Promise<string[]> {
+  return (await GetBookOrder()) ?? [];
+}
+
+export async function setBookOrder(bookIds: string[]): Promise<void> {
+  await SetBookOrder(bookIds);
 }
 
 export async function getDailyReadingSummary(date: string): Promise<DailyReadingSummary> {

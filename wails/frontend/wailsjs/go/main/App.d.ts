@@ -12,6 +12,8 @@ export function GenerateBookID():Promise<string>;
 
 export function GenerateCSVExport(arg1:Array<model.Book>):Promise<string>;
 
+export function GetBookOrder():Promise<Array<string>>;
+
 export function GetDailyReadingSummary(arg1:string):Promise<model.DailyReadingSummary>;
 
 export function GetSettings():Promise<model.UserSettings>;
@@ -33,6 +35,8 @@ export function OpenCSVFile():Promise<string>;
 export function ParseCSVBooks(arg1:string):Promise<Array<model.CSVBookRecord>>;
 
 export function SaveCSVFile(arg1:string,arg2:string):Promise<boolean>;
+
+export function SetBookOrder(arg1:Array<string>):Promise<void>;
 
 export function UpdateBook(arg1:model.UpdateBookRequest):Promise<model.Book>;
 

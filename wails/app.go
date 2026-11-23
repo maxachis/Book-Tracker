@@ -65,6 +65,16 @@ func (a *App) DeleteBook(id string) error {
 	return a.service.Store.DeleteBook(id)
 }
 
+// GetBookOrder returns book IDs in the user's saved display order.
+func (a *App) GetBookOrder() ([]string, error) {
+	return a.service.Store.GetBookOrder()
+}
+
+// SetBookOrder replaces the saved display order with ids.
+func (a *App) SetBookOrder(ids []string) error {
+	return a.service.Store.SetBookOrder(ids)
+}
+
 func (a *App) MarkBookComplete(id string) (model.Book, error) {
 	return a.service.MarkBookComplete(id)
 }

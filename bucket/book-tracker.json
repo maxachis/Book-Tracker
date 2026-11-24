@@ -1,12 +1,12 @@
 {
-  "version": "0.2.8",
+  "version": "0.3.0",
   "description": "A desktop book tracking application built with Wails",
   "homepage": "https://github.com/maxachis/Book-Tracker",
   "license": "MIT",
   "architecture": {
     "64bit": {
-      "url": "https://github.com/maxachis/Book-Tracker/releases/download/v0.2.8/book-tracker.exe",
-      "hash": "6ddc1baaa168676aa59464919a52db77c52fbe45c9a54617cb736848d4422864"
+      "url": "https://github.com/maxachis/Book-Tracker/releases/download/v0.3.0/book-tracker.exe",
+      "hash": "ad980382a6f7290e9eee921974ebd6de220c5c366f90ff95e1a07b58be983597"
     }
   },
   "bin": "book-tracker.exe",

@@ -144,3 +144,4 @@ Tests for the feedback shown when progress is logged, kept light because pages a
 - **BumpNumber**: Verifies the number lifts when it changes but not when first shown.
 - **BookCard +1 feedback**: Verifies that when progress goes up, both the overall and daily bars glow and both counts lift.
 - **Daily goal persistence** (`daily-goal-persistence.test.ts`): Verifies a stored goal for today is what state shows after load (not a fresh default from current progress), goals saved for other dates are ignored, a newly created default goal is saved under today's date, setting a goal saves it under today's date, and a failed save keeps the goal in view while reporting an error.
+- **Daily goal Start/End boxes** (`daily-goal-persistence.test.ts`): Verifies both boxes step in whole numbers, ignore the decimal-point, comma and exponent keys, put a pasted decimal back to the saved value without saving it, and still save a whole number.

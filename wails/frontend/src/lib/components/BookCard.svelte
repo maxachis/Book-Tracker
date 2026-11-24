@@ -115,6 +115,26 @@
   const dailyGoalPercentage = $derived(computeDailyGoalPercentage(book.current_progress, dailyGoal));
 
 
+  /** Keys that would start a fractional (or exponent) number; goals are whole units. */
+  const NON_INTEGER_KEYS = new Set([".", ",", "e", "E"]);
+
+  function blockNonIntegerKeys(e: KeyboardEvent) {
+    if (NON_INTEGER_KEYS.has(e.key)) e.preventDefault();
+  }
+
+  /**
+   * Saves the box's value if it's a whole number; otherwise (e.g. a pasted
+   * "12.5", which the backend would reject) puts the box back to `current`.
+   */
+  function commitWholeNumber(input: HTMLInputElement, { current, save }: { current: number; save: (n: number) => void }) {
+    const value = Number(input.value);
+    if (!Number.isInteger(value)) {
+      input.value = String(current);
+      return;
+    }
+    save(value);
+  }
+
   function updateDailyGoalStart(newStart: number) {
     appState.setDailyGoal(book.id, { start: newStart, end: dailyGoal.end });
   }
@@ -280,8 +300,11 @@
             <input
               id="daily-start-{book.id}"
               type="number"
+              step="1"
               value={dailyGoal.start}
-              onchange={(e) => updateDailyGoalStart(Number(e.currentTarget.value))}
+              onkeydown={blockNonIntegerKeys}
+              onchange={(e) =>
+                commitWholeNumber(e.currentTarget, { current: dailyGoal.start, save: updateDailyGoalStart })}
               min="0"
               max={book.total_progress}
             />
@@ -291,8 +314,11 @@
             <input
               id="daily-end-{book.id}"
               type="number"
+              step="1"
               value={dailyGoal.end}
-              onchange={(e) => updateDailyGoalEnd(Number(e.currentTarget.value))}
+              onkeydown={blockNonIntegerKeys}
+              onchange={(e) =>
+                commitWholeNumber(e.currentTarget, { current: dailyGoal.end, save: updateDailyGoalEnd })}
               min="0"
               max={book.total_progress}
             />

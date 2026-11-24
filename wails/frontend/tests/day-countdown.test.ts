@@ -107,6 +107,42 @@ describe("DayCountdown", () => {
     expect(value(container, "next-due")).toBe("00:13:13"); // 7140s / 9 pages
   });
 
+  // Locations are counted in steps of 100 from where today's goal started, so
+  // the countdown runs to the next of those checkpoints rather than resetting
+  // to a full step whenever a few locations are logged.
+  describe("for locations", () => {
+    const locationBook = (current: number) => ({ ...makeBook("location"), current_progress: current });
+    // Goal 90 → 300 at 8 PM: 200 left = 2 steps over 2h, 1h per step.
+    const renderLocations = () => renderCountdown({ goalEnd: 300, progressType: "location" });
+
+    it("counts down to the next checkpoint, not a full step", () => {
+      const { container } = renderLocations();
+      expect(value(container, "next-due")).toBe("00:54:00"); // 90 of 100 to go to 190
+    });
+
+    it("keeps the deadline when logging fewer locations than reach the checkpoint", async () => {
+      const { container, rerender } = renderLocations();
+      advanceSeconds(60);
+      await rerender({ book: locationBook(101) });
+      flushSync();
+      expect(value(container, "next-due")).toBe("00:53:00");
+    });
+
+    it("starts the next checkpoint's countdown once one is reached", async () => {
+      const { container, rerender } = renderLocations();
+      advanceSeconds(60);
+      await rerender({ book: locationBook(190) });
+      flushSync();
+      expect(value(container, "next-due")).toBe("01:48:10"); // 7140s / 1.1 steps, 1 step to 290
+    });
+
+    it("restarts toward the same checkpoint when its deadline is missed", () => {
+      const { container } = renderLocations();
+      advanceSeconds(54 * 60);
+      expect(value(container, "next-due")).toBe("00:29:42"); // 3960s / 2 steps × 0.9
+    });
+  });
+
   it("names the unit in the pace", () => {
     const locations = renderCountdown({ goalEnd: 300, progressType: "location" });
     expect(paceText(locations.container)).toMatch(/^100 locations every /);

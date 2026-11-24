@@ -5,6 +5,7 @@ import {
   secondsPerUnitDue,
   dueUnitLabel,
   nextDueDeadline,
+  nextCheckpoint,
   paceUnitLabel,
 } from "../src/lib/services/countdown";
 
@@ -65,17 +66,44 @@ describe("secondsPerUnitDue", () => {
   });
 });
 
-// The moment the next unit is due if the reader keeps an even pace from now.
-describe("nextDueDeadline", () => {
-  it("is one pace-interval from now", () => {
-    const now = new Date(2026, 10, 23, 20, 0, 0);
-    const due = nextDueDeadline({ now, endHour: 22, remaining: 10, progressType: "page" });
-    expect(due).toEqual(new Date(2026, 10, 23, 20, 12, 0)); // 2h / 10 pages
+// The next mark to reach: whole steps of the book's unit counted from where
+// today's goal started, so a few locations in doesn't move the mark.
+describe("nextCheckpoint", () => {
+  it.each([
+    ["page", 100, { start: 90, end: 110 }, 101],
+    ["location", 100, { start: 90, end: 300 }, 190],
+    ["location", 189, { start: 90, end: 300 }, 190],
+    ["location", 190, { start: 90, end: 300 }, 290],
+    ["location", 250, { start: 90, end: 300 }, 290],
+    // The last stretch is shorter than a full step; the goal's end caps it.
+    ["location", 295, { start: 90, end: 300 }, 300],
+  ] as const)("for a %s book at %i (goal %o) is %i", (progressType, current, goal, expected) => {
+    expect(nextCheckpoint({ current, goal, progressType })).toBe(expected);
   });
 
   it("is null once today's goal is met", () => {
-    const now = new Date(2026, 10, 23, 20, 0, 0);
-    expect(nextDueDeadline({ now, endHour: 22, remaining: 0, progressType: "page" })).toBeNull();
+    expect(nextCheckpoint({ current: 300, goal: { start: 90, end: 300 }, progressType: "location" })).toBeNull();
+  });
+});
+
+// When the next checkpoint is due if the reader keeps an even pace from now.
+describe("nextDueDeadline", () => {
+  const now = new Date(2026, 10, 23, 20, 0, 0); // 2h before a 10 PM end
+
+  it("is one pace-interval from now for pages", () => {
+    const due = nextDueDeadline({ now, endHour: 22, current: 100, goal: { start: 100, end: 110 }, progressType: "page" });
+    expect(due).toEqual(new Date(2026, 10, 23, 20, 12, 0)); // 2h / 10 pages
+  });
+
+  // 200 locations left = 2 steps of 100, so 1h each; the checkpoint (190)
+  // is 0.9 of a step away, so it's due in 54 minutes.
+  it("covers only the part of a location step still to read", () => {
+    const due = nextDueDeadline({ now, endHour: 22, current: 100, goal: { start: 90, end: 300 }, progressType: "location" });
+    expect(due).toEqual(new Date(2026, 10, 23, 20, 54, 0));
+  });
+
+  it("is null once today's goal is met", () => {
+    expect(nextDueDeadline({ now, endHour: 22, current: 110, goal: { start: 100, end: 110 }, progressType: "page" })).toBeNull();
   });
 });
 

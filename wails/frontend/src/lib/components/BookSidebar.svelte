@@ -32,7 +32,8 @@
   function secondsUntilNextDue(book: Book): number | null {
     const deadline = dueClock.deadlineFor({
       bookId: book.id,
-      remaining: getDailyGoal(book).end - book.current_progress,
+      current: book.current_progress,
+      goal: getDailyGoal(book),
       endHour,
       progressType: book.progress_type,
     });

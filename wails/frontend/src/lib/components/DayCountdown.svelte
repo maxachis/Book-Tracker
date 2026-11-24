@@ -26,7 +26,13 @@
   const now = $derived(dueClock.now);
   /** When the next unit is due; shared with the sidebar so both agree. */
   const deadline = $derived(
-    dueClock.deadlineFor({ bookId: book.id, remaining, endHour, progressType: book.progress_type })
+    dueClock.deadlineFor({
+      bookId: book.id,
+      current: book.current_progress,
+      goal: dailyGoal,
+      endHour,
+      progressType: book.progress_type,
+    })
   );
 
   const secondsLeft = $derived(secondsUntilEndOfDay({ now, endHour }));

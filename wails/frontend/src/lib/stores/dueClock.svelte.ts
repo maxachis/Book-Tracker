@@ -1,12 +1,12 @@
-import type { ProgressType } from "../types";
-import { nextDueDeadline } from "../services/countdown";
+import type { DailyGoal, ProgressType } from "../types";
+import { nextCheckpoint, nextDueDeadline } from "../services/countdown";
 
 const TICK_MS = 1000;
 
-/** When a book's current next-due countdown started, and what it was counting. */
+/** A book's current next-due countdown, and what it is counting toward. */
 interface Anchor {
   key: string;
-  startedAt: Date;
+  deadline: Date | null;
 }
 
 /**
@@ -38,34 +38,34 @@ class DueClock {
   }
 
   /**
-   * When the book's next unit is due. A new countdown starts when what's left
-   * (or the end of day, or the unit) changes, and when the last one ran out
-   * without progress. Null once today's goal is met.
+   * When the book's next checkpoint is due. A new countdown starts when the
+   * checkpoint moves (a page read, 100 locations passed), when the goal, end
+   * of day or unit changes, and when the last one ran out. Progress short of
+   * the checkpoint keeps the deadline. Null once today's goal is met.
    */
   deadlineFor({
     bookId,
-    remaining,
+    current,
+    goal,
     endHour,
     progressType,
   }: {
     bookId: string;
-    remaining: number;
+    current: number;
+    goal: DailyGoal;
     endHour: number;
     progressType: ProgressType;
   }): Date | null {
     const now = this.now;
-    const key = `${remaining}|${endHour}|${progressType}`;
+    const checkpoint = nextCheckpoint({ current, goal, progressType });
+    const key = `${checkpoint}|${goal.start}|${goal.end}|${endHour}|${progressType}`;
     let anchor = this.#anchors.get(bookId);
-    if (!anchor || anchor.key !== key) {
-      anchor = { key, startedAt: now };
+    const expired = anchor?.deadline != null && now >= anchor.deadline;
+    if (!anchor || anchor.key !== key || expired) {
+      anchor = { key, deadline: nextDueDeadline({ now, endHour, current, goal, progressType }) };
       this.#anchors.set(bookId, anchor);
     }
-    const deadline = nextDueDeadline({ now: anchor.startedAt, endHour, remaining, progressType });
-    if (deadline && now >= deadline) {
-      anchor.startedAt = now;
-      return nextDueDeadline({ now, endHour, remaining, progressType });
-    }
-    return deadline;
+    return anchor.deadline;
   }
 
   /** Forget every countdown (tests start each case fresh). */

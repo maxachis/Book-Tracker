@@ -1,4 +1,4 @@
-import type { ProgressType } from "../types";
+import type { DailyGoal, ProgressType } from "../types";
 
 const SECONDS_PER_MINUTE = 60;
 const SECONDS_PER_HOUR = 3600;
@@ -64,22 +64,48 @@ export function dueUnitLabel(progressType: ProgressType): string {
 }
 
 /**
- * When the next unit is due if the reader keeps an even pace from `now` to the
- * end of the reading day. Null when today's goal is met.
+ * The next mark to reach today: whole "due" steps counted from the goal's
+ * start (every page; every 100 locations), capped at the goal's end. Logging
+ * part of a step leaves the mark where it is. Null once the goal is met.
+ */
+export function nextCheckpoint({
+  current,
+  goal,
+  progressType,
+}: {
+  current: number;
+  goal: DailyGoal;
+  progressType: ProgressType;
+}): number | null {
+  if (current >= goal.end) return null;
+  const size = DUE_UNIT[progressType].size;
+  const stepsDone = Math.max(0, Math.floor((current - goal.start) / size));
+  return Math.min(goal.start + (stepsDone + 1) * size, goal.end);
+}
+
+/**
+ * When the next checkpoint is due if the reader keeps an even pace from `now`
+ * to the end of the reading day: the time per step, scaled by how much of a
+ * step is left to the checkpoint. Null when today's goal is met.
  */
 export function nextDueDeadline({
   now,
   endHour,
-  remaining,
+  current,
+  goal,
   progressType,
 }: {
   now: Date;
   endHour: number;
-  remaining: number;
+  current: number;
+  goal: DailyGoal;
   progressType: ProgressType;
 }): Date | null {
+  const checkpoint = nextCheckpoint({ current, goal, progressType });
+  if (checkpoint === null) return null;
   const secondsLeft = secondsUntilEndOfDay({ now, endHour });
-  const perUnit = secondsPerUnitDue({ secondsLeft, remaining, progressType });
+  const perUnit = secondsPerUnitDue({ secondsLeft, remaining: goal.end - current, progressType });
   if (perUnit === null) return null;
-  return new Date(now.getTime() + perUnit * MS_PER_SECOND);
+  const stepsToCheckpoint = (checkpoint - current) / DUE_UNIT[progressType].size;
+  return new Date(now.getTime() + perUnit * stepsToCheckpoint * MS_PER_SECOND);
 }

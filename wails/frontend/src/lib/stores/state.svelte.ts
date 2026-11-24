@@ -70,7 +70,8 @@ class AppState {
     const goal = this.getDailyGoal(book.id) ?? defaultDailyGoal(book, this.settings);
     return dueClock.deadlineFor({
       bookId: book.id,
-      remaining: goal.end - book.current_progress,
+      current: book.current_progress,
+      goal,
       endHour: this.settings.reading_end_hour,
       progressType: book.progress_type,
     });

@@ -28,3 +28,6 @@
 - **TestUpdateBook_NoSessionWhenProgressUnchanged**: A zero-delta update (no `current_progress` change) does not create a session row.
 - **TestSetDailyGoal_Validation**: Table-driven: valid, empty-range and end-before-start goals are saved (the last happens mid-edit); malformed or empty dates, and a missing book ID are rejected.
 - **TestGetDailyGoals_Validation**: Table-driven: a valid date returns a non-nil slice; malformed or empty dates are rejected.
+- **TestUpdateSettings_LocationStepMergesWithoutDisturbingHours**: A location-step-only update keeps the hours, and an hours-only update keeps the step, since the frontend saves one setting at a time.
+- **TestGetSettings_DefaultLocationStepWhenRowMissing**: The fallback default settings carry a location step of 100, not zero.
+- **TestValidateSettings_LocationStepBounds**: Table-driven: 0, negatives and 100001 are rejected with the range error; 1 and 100000 are accepted.

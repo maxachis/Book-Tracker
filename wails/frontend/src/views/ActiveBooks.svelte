@@ -136,6 +136,7 @@
           selectedId={selectedBook?.id ?? null}
           getDailyGoal={dailyGoalFor}
           endHour={appState.settings.reading_end_hour}
+          locationStep={appState.settings.location_step}
           onSelect={(id) => (selectedId = id)}
           onReorder={handleReorder}
         />

@@ -1,5 +1,5 @@
-import type { DailyGoal, ProgressType } from "../types";
-import { nextCheckpoint, nextDueDeadline } from "../services/countdown";
+import type { DailyGoal } from "../types";
+import { nextCheckpoint, nextDueDeadline, type StepUnit } from "../services/countdown";
 
 const TICK_MS = 1000;
 
@@ -39,8 +39,8 @@ class DueClock {
 
   /**
    * When the book's next checkpoint is due. A new countdown starts when the
-   * checkpoint moves (a page read, 100 locations passed), when the goal, end
-   * of day or unit changes, and when the last one ran out. Progress short of
+   * checkpoint moves (a page read, a location step passed), when the goal,
+   * end of day, unit or location step changes, and when the last one ran out. Progress short of
    * the checkpoint keeps the deadline. Null once today's goal is met.
    */
   deadlineFor({
@@ -48,21 +48,20 @@ class DueClock {
     current,
     goal,
     endHour,
-    progressType,
-  }: {
+    ...unit
+  }: StepUnit & {
     bookId: string;
     current: number;
     goal: DailyGoal;
     endHour: number;
-    progressType: ProgressType;
   }): Date | null {
     const now = this.now;
-    const checkpoint = nextCheckpoint({ current, goal, progressType });
-    const key = `${checkpoint}|${goal.start}|${goal.end}|${endHour}|${progressType}`;
+    const checkpoint = nextCheckpoint({ current, goal, ...unit });
+    const key = `${checkpoint}|${goal.start}|${goal.end}|${endHour}|${unit.progressType}|${unit.locationStep}`;
     let anchor = this.#anchors.get(bookId);
     const expired = anchor?.deadline != null && now >= anchor.deadline;
     if (!anchor || anchor.key !== key || expired) {
-      anchor = { key, deadline: nextDueDeadline({ now, endHour, current, goal, progressType }) };
+      anchor = { key, deadline: nextDueDeadline({ now, endHour, current, goal, ...unit }) };
       this.#anchors.set(bookId, anchor);
     }
     return anchor.deadline;

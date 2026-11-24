@@ -1,10 +1,16 @@
 <script lang="ts">
   import { appState } from "../lib/stores/state.svelte";
   import { updateSettings } from "../lib/services/database";
+  import { blockNonIntegerKeys } from "../lib/services/wholeNumbers";
+
+  /** Bounds the backend accepts for locations per step. */
+  const MIN_LOCATION_STEP = 1;
+  const MAX_LOCATION_STEP = 100_000;
 
   let readingStartHour = $state(appState.settings.reading_start_hour);
   let readingEndHour = $state(appState.settings.reading_end_hour);
   let statsStartDate = $state(appState.settings.stats_start_date ?? "");
+  let locationStep = $state<number | null>(appState.settings.location_step);
   let isSaving = $state(false);
   let error = $state<string | null>(null);
   let success = $state<string | null>(null);
@@ -14,6 +20,10 @@
   async function handleSave() {
     error = null;
     success = null;
+    if (!isValidLocationStep(locationStep)) {
+      error = `Locations per step must be a whole number from ${MIN_LOCATION_STEP} to ${MAX_LOCATION_STEP.toLocaleString()}`;
+      return;
+    }
     isSaving = true;
 
     try {
@@ -21,6 +31,7 @@
         reading_start_hour: readingStartHour,
         reading_end_hour: readingEndHour,
         stats_start_date: statsStartDate || null,
+        location_step: locationStep,
       });
       await appState.refreshSettings();
       success = "Settings saved successfully";
@@ -31,10 +42,15 @@
     }
   }
 
+  function isValidLocationStep(step: number | null): step is number {
+    return Number.isInteger(step) && step! >= MIN_LOCATION_STEP && step! <= MAX_LOCATION_STEP;
+  }
+
   $effect(() => {
     readingStartHour = appState.settings.reading_start_hour;
     readingEndHour = appState.settings.reading_end_hour;
     statsStartDate = appState.settings.stats_start_date ?? "";
+    locationStep = appState.settings.location_step;
   });
 </script>
 
@@ -80,6 +96,31 @@
 
     <div class="info-box">
       <span class="info-value">{readingEndHour - readingStartHour}</span> hours available per day
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="section-header">
+      <h3>Locations</h3>
+      <span class="section-ornament">&#9671;</span>
+    </div>
+    <p class="description">
+      For books tracked by location, the countdown runs to a checkpoint every this many
+      locations from the start of today's goal.
+    </p>
+
+    <div class="form-group">
+      <label for="locationStep">Locations per step</label>
+      <input
+        id="locationStep"
+        type="number"
+        inputmode="numeric"
+        step="1"
+        min={MIN_LOCATION_STEP}
+        max={MAX_LOCATION_STEP}
+        bind:value={locationStep}
+        onkeydown={blockNonIntegerKeys}
+      />
     </div>
   </div>
 

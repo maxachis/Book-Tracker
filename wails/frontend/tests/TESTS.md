@@ -98,17 +98,18 @@ Tests for the end-of-day countdown math.
 
 - **formatCountdown**: Verifies seconds display as HH:MM:SS, dropping fractions and never going negative.
 - **secondsUntilEndOfDay**: Verifies the time left until the reading end hour (local time), and that it is zero once that hour has passed.
-- **secondsPerUnitDue**: Verifies the time left is spread over the units still needed for today's goal (pages, whole percent, or blocks of 100 locations), with nothing due once the goal is met.
-- **nextCheckpoint**: Verifies the next mark to reach is one whole step (a page, or 100 locations) past the last step completed since the goal's start, capped at the goal's end, so part of a step doesn't move it; nothing once the goal is met.
+- **secondsPerUnitDue**: Verifies the time left is spread over the units still needed for today's goal (pages, whole percent, or blocks of the chosen location step, 100 by default), with nothing due once the goal is met.
+- **nextCheckpoint**: Verifies the next mark to reach is one whole step (a page, or the chosen number of locations) past the last step completed since the goal's start, capped at the goal's end, so part of a step doesn't move it; the location step doesn't affect pages or percent; nothing once the goal is met.
 - **nextDueDeadline**: Verifies the next checkpoint is due one even-pace interval from now for pages, only the unread part of a step for locations, and that nothing is due once today's goal is met.
 - **paceUnitLabel**: Verifies each tracking type phrases one step as an amount for the pace ("1 page", "1%", "100 locations").
+- **location step labels**: Verifies the due and pace labels name the chosen step ("250 locations"), in the singular for a step of one.
 - **dueUnitLabel**: Verifies each tracking type names its due unit ("page", "1%", "100 locations").
 
 ## day-countdown.test.ts
 
 Tests for the countdown row on the book card.
 
-- **DayCountdown**: Verifies it shows the time left until the end of the reading day and until the next unit is due, ticks every second, names the unit for each tracking type, says "Goal met" once today's goal is reached, and stops its clock when removed. The next-due deadline counts down in real time beside a live "1 page every …" pace, and a new deadline starts when the old one passes without progress or when progress is logged. It also shows how much is left for today's goal in the book's own unit (pages, locations or percent), never below zero. For locations it counts down to the next 100-location checkpoint: logging less than that keeps the deadline, reaching it starts the next, and a missed one restarts toward the same checkpoint.
+- **DayCountdown**: Verifies it shows the time left until the end of the reading day and until the next unit is due, ticks every second, names the unit for each tracking type, says "Goal met" once today's goal is reached, and stops its clock when removed. The next-due deadline counts down in real time beside a live "1 page every …" pace, and a new deadline starts when the old one passes without progress or when progress is logged. It also shows how much is left for today's goal in the book's own unit (pages, locations or percent), never below zero. For locations it counts down to the next checkpoint, every location step (100 by default) from the goal's start: logging less than that keeps the deadline, reaching it starts the next, and a missed one restarts toward the same checkpoint. A different step changes the checkpoint, the labels and the pace, and changing it starts a new countdown.
 
 ## calendar.test.ts
 
@@ -148,3 +149,9 @@ Tests for the feedback shown when progress is logged, kept light because pages a
 - **BookCard +1 feedback**: Verifies that when progress goes up, both the overall and daily bars glow and both counts lift.
 - **Daily goal persistence** (`daily-goal-persistence.test.ts`): Verifies a stored goal for today is what state shows after load (not a fresh default from current progress), goals saved for other dates are ignored, a newly created default goal is saved under today's date, setting a goal saves it under today's date, and a failed save keeps the goal in view while reporting an error.
 - **Daily goal Start/End boxes** (`daily-goal-persistence.test.ts`): Verifies both boxes step in whole numbers, ignore the decimal-point, comma and exponent keys, put a pasted decimal back to the saved value without saving it, and still save a whole number.
+
+## settings-view.test.ts
+
+Tests for the Settings page, with the backend stubbed.
+
+- **Settings: location step**: Verifies the page shows the saved locations-per-step, saves a new value and applies it app-wide, refuses to save 0, a decimal or an empty box (showing a whole-number error), and ignores the decimal-point, comma and exponent keys.

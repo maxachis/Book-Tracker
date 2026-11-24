@@ -64,3 +64,66 @@ func TestUpdateSettings_InvalidRange(t *testing.T) {
 		t.Fatal("expected start>=end error")
 	}
 }
+
+func TestUpdateSettings_LocationStepMergesWithoutDisturbingHours(t *testing.T) {
+	// The frontend saves one setting at a time, so a location-step-only
+	// update must keep the hours and an hours-only update must keep the step.
+	svc := newTestService(t)
+	step := 250
+	got, err := svc.UpdateSettings(model.UpdateSettingsRequest{LocationStep: &step})
+	if err != nil {
+		t.Fatalf("update: %v", err)
+	}
+	if got.LocationStep != 250 || got.ReadingStartHour != 8 || got.ReadingEndHour != 22 {
+		t.Fatalf("unexpected merge: %+v", got)
+	}
+
+	start := 6
+	got, err = svc.UpdateSettings(model.UpdateSettingsRequest{ReadingStartHour: &start})
+	if err != nil {
+		t.Fatalf("update hours: %v", err)
+	}
+	if got.LocationStep != 250 {
+		t.Fatalf("hours update reset location step: %+v", got)
+	}
+	reloaded, _ := svc.GetSettings()
+	if reloaded.LocationStep != 250 {
+		t.Fatalf("not persisted: %+v", reloaded)
+	}
+}
+
+func TestGetSettings_DefaultLocationStepWhenRowMissing(t *testing.T) {
+	// The fallback defaults must carry the 100-location step, not zero.
+	if model.DefaultSettings().LocationStep != 100 {
+		t.Fatalf("want 100, got %d", model.DefaultSettings().LocationStep)
+	}
+}
+
+func TestValidateSettings_LocationStepBounds(t *testing.T) {
+	// A step below 1 would divide by zero in due-date math and an enormous
+	// one is nonsense, so only [1, 100000] is accepted.
+	tests := []struct {
+		name    string
+		step    int
+		wantErr bool
+	}{
+		{"zero rejected", 0, true},
+		{"negative rejected", -5, true},
+		{"minimum accepted", 1, false},
+		{"maximum accepted", 100000, false},
+		{"above maximum rejected", 100001, true},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			step := tc.step
+			err := ValidateSettings(model.UpdateSettingsRequest{LocationStep: &step})
+			if tc.wantErr {
+				if err == nil || !strings.Contains(err.Error(), "location step must be between 1 and 100000") {
+					t.Fatalf("expected range error, got %v", err)
+				}
+			} else if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}

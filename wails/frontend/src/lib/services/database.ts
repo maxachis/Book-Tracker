@@ -24,6 +24,7 @@ import type {
   DailyReadingSummary,
   DailyGoal,
 } from "../types";
+import { DEFAULT_LOCATION_STEP } from "./countdown";
 
 function normalizeBook(b: any): Book {
   return {
@@ -45,6 +46,7 @@ function normalizeSettings(s: any): UserSettings {
     reading_start_hour: s.reading_start_hour,
     reading_end_hour: s.reading_end_hour,
     stats_start_date: s.stats_start_date ?? null,
+    location_step: s.location_step ?? DEFAULT_LOCATION_STEP,
   };
 }
 

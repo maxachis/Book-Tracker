@@ -12,7 +12,7 @@
 - **TestBooksCRUD_FileBacked**: Runs insert + list against a real on-disk SQLite DB.
 - **TestGetSettings_SeededDefaults**: After `Open`, the seeded settings row returns the `(8, 22, nil)` defaults.
 - **TestUpdateSettings_PersistsFields**: Updates hours and stats_start_date, then reloads to confirm they were written.
-- **TestSettings_FileBacked**: Settings round-trip against a file-backed DB to exercise the real driver.
+- **TestSettings_FileBacked**: Settings (including the default location step) round-trip against a file-backed DB to exercise the real driver.
 - **TestUpsertReadingSession_InsertsNew**: Upserting a session for a new (book_id, date) creates a row with the correct delta.
 - **TestUpsertReadingSession_AccumulatesOnSameDay**: Two upserts on the same (book_id, date) add their deltas together.
 - **TestUpsertReadingSession_SeparateDaysAreIndependent**: Sessions on different dates keep separate deltas.
@@ -29,3 +29,5 @@
 - **TestDeleteBook_RemovesDailyGoals**: Deleting a book also removes its saved goals (foreign keys are off, so cascade does not fire).
 - **TestDailyGoals_FileBacked_PersistsAcrossReopen**: A saved goal survives closing and reopening a file-backed DB.
 - **TestSetDailyGoal_ConcurrentSavesToFileAllSucceed**: Twenty goal saves fired at once against a file-backed DB all succeed, waiting their turn instead of failing with "database is locked" (the Reading tab saves every book's default goal at once on load).
+- **TestGetSettings_DefaultLocationStep**: A fresh database reports the default location step (100).
+- **TestUpdateSettings_PersistsLocationStep**: A saved location step survives a reload, and a later hours-only save from a reloaded row does not reset it.

@@ -14,12 +14,14 @@
     getDailyGoal: (book: Book) => DailyGoal;
     /** Hour (local) the reading day ends; the next-due countdown runs to it. */
     endHour: number;
+    /** Locations per "due" step; set in Settings. */
+    locationStep: number;
     onSelect: (bookId: string) => void;
     /** Called with the full new order of book IDs after a drag or Alt+Arrow move. */
     onReorder?: (bookIds: string[]) => void;
   }
 
-  let { books, selectedId, getDailyGoal, endHour, onSelect, onReorder }: Props = $props();
+  let { books, selectedId, getDailyGoal, endHour, locationStep, onSelect, onReorder }: Props = $props();
 
   const MS_PER_SECOND = 1000;
 
@@ -36,6 +38,7 @@
       goal: getDailyGoal(book),
       endHour,
       progressType: book.progress_type,
+      locationStep,
     });
     return deadline ? (deadline.getTime() - dueClock.now.getTime()) / MS_PER_SECOND : null;
   }
@@ -166,7 +169,7 @@
     {#if nextDue !== null}
       <span class="status-row">
         <span class="status-metric" data-metric="next-due">
-          <span class="label">Next {dueUnitLabel(book.progress_type)}</span>
+          <span class="label">Next {dueUnitLabel({ progressType: book.progress_type, locationStep })}</span>
           <span class="value">{formatCountdown(nextDue)}</span>
         </span>
       </span>

@@ -19,9 +19,17 @@ function makeBook(progressType: ProgressType = "page"): Book {
   };
 }
 
-function renderCountdown({ goalEnd, progressType = "page" }: { goalEnd: number; progressType?: ProgressType }) {
+function renderCountdown({
+  goalEnd,
+  progressType = "page",
+  locationStep = 100,
+}: {
+  goalEnd: number;
+  progressType?: ProgressType;
+  locationStep?: number;
+}) {
   return render(DayCountdown, {
-    props: { book: makeBook(progressType), dailyGoal: { start: 90, end: goalEnd }, endHour: 22 },
+    props: { book: makeBook(progressType), dailyGoal: { start: 90, end: goalEnd }, endHour: 22, locationStep },
   });
 }
 
@@ -107,7 +115,7 @@ describe("DayCountdown", () => {
     expect(value(container, "next-due")).toBe("00:13:13"); // 7140s / 9 pages
   });
 
-  // Locations are counted in steps of 100 from where today's goal started, so
+  // Locations are counted in steps (100 by default) from where today's goal started, so
   // the countdown runs to the next of those checkpoints rather than resetting
   // to a full step whenever a few locations are logged.
   describe("for locations", () => {
@@ -134,6 +142,23 @@ describe("DayCountdown", () => {
       await rerender({ book: locationBook(190) });
       flushSync();
       expect(value(container, "next-due")).toBe("01:48:10"); // 7140s / 1.1 steps, 1 step to 290
+    });
+
+    // The step is the reader's choice in Settings (100 is the default).
+    // Goal 90 → 300 at 8 PM with steps of 50: 200 left = 4 steps, 30 min each.
+    it("uses the chosen location step for the checkpoint, label and pace", () => {
+      const { container, getByText } = renderCountdown({ goalEnd: 300, progressType: "location", locationStep: 50 });
+      expect(value(container, "next-due")).toBe("00:24:00"); // 40 of 50 to go to 140
+      expect(getByText(/next 50 locations due/i)).toBeTruthy();
+      expect(paceText(container)).toBe("50 locations every 00:30:00");
+    });
+
+    it("starts a new countdown when the step changes", async () => {
+      const { container, rerender } = renderLocations();
+      advanceSeconds(60);
+      await rerender({ locationStep: 50 });
+      flushSync();
+      expect(value(container, "next-due")).toBe("00:23:48"); // 7140s / 4 steps × 0.8
     });
 
     it("restarts toward the same checkpoint when its deadline is missed", () => {

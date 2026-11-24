@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { blockNonIntegerKeys } from "../services/wholeNumbers";
   import type { Book, ProgressType, UpdateBookRequest, UserSettings } from "../types";
   import ProgressBar from "./ProgressBar.svelte";
   import ReadingGoals from "./ReadingGoals.svelte";
@@ -114,13 +115,6 @@
 
   const dailyGoalPercentage = $derived(computeDailyGoalPercentage(book.current_progress, dailyGoal));
 
-
-  /** Keys that would start a fractional (or exponent) number; goals are whole units. */
-  const NON_INTEGER_KEYS = new Set([".", ",", "e", "E"]);
-
-  function blockNonIntegerKeys(e: KeyboardEvent) {
-    if (NON_INTEGER_KEYS.has(e.key)) e.preventDefault();
-  }
 
   /**
    * Saves the box's value if it's a whole number; otherwise (e.g. a pasted
@@ -338,7 +332,7 @@
     </div>
 
     <ReadingGoals {book} {settings} {dailyGoal} />
-    <DayCountdown {book} {dailyGoal} endHour={settings.reading_end_hour} />
+    <DayCountdown {book} {dailyGoal} endHour={settings.reading_end_hour} locationStep={settings.location_step} />
   {:else}
     <div class="book-progress">
       <ProgressBar {percentage} />

@@ -23,6 +23,7 @@ import { applyCustomOrder } from "../services/ordering";
 import { calculateStatistics, defaultDailyGoal } from "../services/calculations";
 import { DEFAULT_READING_SORT, sortReadingBooks } from "../services/sorting";
 import { dueClock } from "./dueClock.svelte";
+import { DEFAULT_LOCATION_STEP } from "../services/countdown";
 import { localDateISO } from "../services/dates";
 
 class AppState {
@@ -33,6 +34,7 @@ class AppState {
     reading_start_hour: 8,
     reading_end_hour: 22,
     stats_start_date: null,
+    location_step: DEFAULT_LOCATION_STEP,
   });
   currentView = $state<View>("active");
   /** Book IDs in the reader's saved order. */
@@ -74,6 +76,7 @@ class AppState {
       goal,
       endHour: this.settings.reading_end_hour,
       progressType: book.progress_type,
+      locationStep: this.settings.location_step,
     });
   }
 

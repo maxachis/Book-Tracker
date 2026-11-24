@@ -15,9 +15,13 @@
     dailyGoal: DailyGoal;
     /** Hour (0–24, local) the reading day ends; set in Settings. */
     endHour: number;
+    /** Locations per "due" step; set in Settings. */
+    locationStep: number;
   }
 
-  let { book, dailyGoal, endHour }: Props = $props();
+  let { book, dailyGoal, endHour, locationStep }: Props = $props();
+
+  const unit = $derived({ progressType: book.progress_type, locationStep });
 
   const remaining = $derived(dailyGoal.end - book.current_progress);
 
@@ -31,7 +35,7 @@
       current: book.current_progress,
       goal: dailyGoal,
       endHour,
-      progressType: book.progress_type,
+      ...unit,
     })
   );
 
@@ -41,9 +45,9 @@
   );
   /** Live pace: time left spread over what's left, recomputed every tick. */
   const paceSeconds = $derived(
-    secondsPerUnitDue({ secondsLeft, remaining, progressType: book.progress_type })
+    secondsPerUnitDue({ secondsLeft, remaining, ...unit })
   );
-  const unitLabel = $derived(dueUnitLabel(book.progress_type));
+  const unitLabel = $derived(dueUnitLabel(unit));
   const endHourLabel = $derived(
     new Date(2000, 0, 1, endHour).toLocaleTimeString([], { hour: "numeric" })
   );
@@ -67,7 +71,7 @@
       {#if paceSeconds === null}
         &mdash;
       {:else}
-        <span class="pace-unit">{paceUnitLabel(book.progress_type)} every</span> {formatCountdown(paceSeconds)}
+        <span class="pace-unit">{paceUnitLabel(unit)} every</span> {formatCountdown(paceSeconds)}
       {/if}
     </span>
     <span class="countdown-label">current pace</span>

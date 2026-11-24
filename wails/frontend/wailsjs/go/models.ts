@@ -171,6 +171,7 @@ export namespace model {
 	    reading_start_hour?: number;
 	    reading_end_hour?: number;
 	    stats_start_date?: string;
+	    location_step?: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new UpdateSettingsRequest(source);
@@ -181,6 +182,7 @@ export namespace model {
 	        this.reading_start_hour = source["reading_start_hour"];
 	        this.reading_end_hour = source["reading_end_hour"];
 	        this.stats_start_date = source["stats_start_date"];
+	        this.location_step = source["location_step"];
 	    }
 	}
 	export class UserSettings {
@@ -188,6 +190,7 @@ export namespace model {
 	    reading_start_hour: number;
 	    reading_end_hour: number;
 	    stats_start_date?: string;
+	    location_step: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new UserSettings(source);
@@ -199,6 +202,7 @@ export namespace model {
 	        this.reading_start_hour = source["reading_start_hour"];
 	        this.reading_end_hour = source["reading_end_hour"];
 	        this.stats_start_date = source["stats_start_date"];
+	        this.location_step = source["location_step"];
 	    }
 	}
 

@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/maxachis/book-tracker/wails/model"
 	"github.com/maxachis/book-tracker/wails/store"
@@ -39,6 +40,9 @@ func (s *Service) UpdateSettings(req model.UpdateSettingsRequest) (model.UserSet
 	if req.StatsStartDate != nil {
 		cur.StatsStartDate = req.StatsStartDate
 	}
+	if req.LocationStep != nil {
+		cur.LocationStep = *req.LocationStep
+	}
 	if err := s.Store.UpdateSettings(cur); err != nil {
 		return model.UserSettings{}, err
 	}
@@ -62,6 +66,11 @@ func ValidateSettings(req model.UpdateSettingsRequest) error {
 	if req.ReadingStartHour != nil && req.ReadingEndHour != nil {
 		if *req.ReadingStartHour >= *req.ReadingEndHour {
 			return errors.New("reading start hour must be less than end hour")
+		}
+	}
+	if req.LocationStep != nil {
+		if *req.LocationStep < model.MinLocationStep || *req.LocationStep > model.MaxLocationStep {
+			return fmt.Errorf("location step must be between %d and %d", model.MinLocationStep, model.MaxLocationStep)
 		}
 	}
 	return nil

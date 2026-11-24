@@ -14,8 +14,8 @@ import (
 func (s *Store) GetSettings() (model.UserSettings, error) {
 	var us model.UserSettings
 	err := s.DB.QueryRow(
-		`SELECT id, reading_start_hour, reading_end_hour, stats_start_date FROM user_settings WHERE id = 1`,
-	).Scan(&us.ID, &us.ReadingStartHour, &us.ReadingEndHour, &us.StatsStartDate)
+		`SELECT id, reading_start_hour, reading_end_hour, stats_start_date, location_step FROM user_settings WHERE id = 1`,
+	).Scan(&us.ID, &us.ReadingStartHour, &us.ReadingEndHour, &us.StatsStartDate, &us.LocationStep)
 	if errors.Is(err, sql.ErrNoRows) {
 		return model.UserSettings{}, ErrNotFound
 	}
@@ -27,8 +27,8 @@ func (s *Store) GetSettings() (model.UserSettings, error) {
 
 func (s *Store) UpdateSettings(us model.UserSettings) error {
 	_, err := s.DB.Exec(
-		`UPDATE user_settings SET reading_start_hour = ?, reading_end_hour = ?, stats_start_date = ? WHERE id = 1`,
-		us.ReadingStartHour, us.ReadingEndHour, us.StatsStartDate,
+		`UPDATE user_settings SET reading_start_hour = ?, reading_end_hour = ?, stats_start_date = ?, location_step = ? WHERE id = 1`,
+		us.ReadingStartHour, us.ReadingEndHour, us.StatsStartDate, us.LocationStep,
 	)
 	if err != nil {
 		return fmt.Errorf("update settings: %w", err)

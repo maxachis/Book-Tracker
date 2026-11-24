@@ -35,12 +35,15 @@ export interface UserSettings {
   reading_start_hour: number;
   reading_end_hour: number;
   stats_start_date: string | null;
+  /** Locations per "due" step for location books. */
+  location_step: number;
 }
 
 export interface UpdateSettingsRequest {
   reading_start_hour?: number;
   reading_end_hour?: number;
   stats_start_date?: string | null;
+  location_step?: number;
 }
 
 export type SortField = "target_date" | "title" | "progress" | "created_at";

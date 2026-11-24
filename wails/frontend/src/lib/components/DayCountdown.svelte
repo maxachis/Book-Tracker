@@ -9,6 +9,8 @@
     amountUnitLabel,
   } from "../services/countdown";
   import { dueClock } from "../stores/dueClock.svelte";
+  import { tomorrowGoalDrop } from "../services/calculations";
+  import ProgressBar from "./ProgressBar.svelte";
 
   interface Props {
     book: Book;
@@ -24,6 +26,7 @@
   const unit = $derived({ progressType: book.progress_type, locationStep });
 
   const remaining = $derived(dailyGoal.end - book.current_progress);
+  const goalMet = $derived(remaining <= 0);
 
   $effect(() => dueClock.subscribe());
 
@@ -48,12 +51,31 @@
     secondsPerUnitDue({ secondsLeft, remaining, ...unit })
   );
   const unitLabel = $derived(dueUnitLabel(unit));
+  /** Once today's goal is met: how much more would lower tomorrow's goal by one. */
+  const drop = $derived(goalMet ? tomorrowGoalDrop({ book, today: now }) : null);
   const endHourLabel = $derived(
     new Date(2000, 0, 1, endHour).toLocaleTimeString([], { hour: "numeric" })
   );
 </script>
 
 <div class="day-countdown">
+  {#if goalMet}
+  <div class="countdown-item met" data-metric="goal-met">
+    <span class="countdown-value"><span aria-hidden="true">&#10003;</span> Goal met</span>
+  </div>
+  {#if drop}
+    <div class="countdown-divider drop-divider"></div>
+    <div class="drop-bar" data-metric="tomorrow-drop-bar">
+      <ProgressBar percentage={drop.percentage} showLabel={false} />
+    </div>
+    <div class="countdown-item drop-count" data-metric="tomorrow-drop">
+      <span class="countdown-value">{drop.needed}</span>
+      <span class="countdown-label">
+        {amountUnitLabel(book.progress_type)} until tomorrow's goal drops to {drop.droppedTo}
+      </span>
+    </div>
+  {/if}
+  {:else}
   <div class="countdown-item" data-metric="day-left">
     <span class="countdown-value">{formatCountdown(secondsLeft)}</span>
     <span class="countdown-label">left until {endHourLabel}</span>
@@ -81,11 +103,15 @@
     <span class="countdown-value">{Math.max(0, remaining)}</span>
     <span class="countdown-label">{amountUnitLabel(book.progress_type)} left today</span>
   </div>
+  {/if}
 </div>
 
 <style>
   .day-countdown {
+    container-type: inline-size;
     display: flex;
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
     align-items: center;
     padding: 0.6rem 0.75rem;
     background: rgba(212, 185, 120, 0.04);
@@ -119,6 +145,45 @@
 
   .countdown-item.met .countdown-value {
     color: var(--accent-green);
+  }
+
+  /* Fills the space the countdowns used, between "Goal met" and the count. */
+  .drop-bar {
+    flex: 1;
+    min-width: 3rem;
+    padding: 0 0.75rem;
+  }
+
+  [data-metric="goal-met"] {
+    flex-shrink: 0;
+  }
+
+  .countdown-item.met .countdown-value {
+    white-space: nowrap;
+  }
+
+  /* The long label wraps on a narrow card rather than spilling out of the row. */
+  .drop-count {
+    flex: 0 1 auto;
+  }
+
+  .drop-count .countdown-label {
+    white-space: normal;
+    text-align: center;
+  }
+
+  /* On a narrow card: "Goal met" and the count share a line, the bar runs full width below. */
+  @container (max-width: 420px) {
+    .drop-divider {
+      display: none;
+    }
+    .drop-count {
+      flex: 1;
+    }
+    .drop-bar {
+      order: 1;
+      flex-basis: 100%;
+    }
   }
 
   .pace-unit {

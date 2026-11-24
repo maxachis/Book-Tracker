@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   tomorrowGoalAmount,
+  tomorrowGoalDrop,
   calculateReadingGoal,
   calculateStatistics,
   getProgressLabel,
@@ -371,5 +372,57 @@ describe("tomorrowGoalAmount", () => {
 
   it("is zero once the book is finished", () => {
     expect(tomorrowGoalAmount({ book: book({ current_progress: 400, target_date: "2026-12-03" }), today })).toBe(0);
+  });
+});
+
+// Once today's goal is met, the card shows how much more reading today would
+// trim tomorrow's goal by one whole unit, and how far along that stretch is.
+describe("tomorrowGoalDrop", () => {
+  const today = new Date(2026, 10, 23, 15, 0, 0);
+  const book = (overrides: Partial<Book>): Book => ({
+    id: "t", title: "T", author: null, current_progress: 100, total_progress: 400,
+    progress_type: "page", target_date: null, completed_at: null, created_at: "2026-01-01T00:00:00Z",
+    ...overrides,
+  });
+
+  // 300 left over 10 days asks 30 a day; 290 left would ask 29.
+  it("counts what's needed for tomorrow's goal to drop by one", () => {
+    expect(tomorrowGoalDrop({ book: book({ target_date: "2026-12-03" }), today })).toEqual({
+      tomorrow: 30,
+      droppedTo: 29,
+      needed: 10,
+      percentage: 0,
+    });
+  });
+
+  it("measures progress through the current stretch", () => {
+    const drop = tomorrowGoalDrop({ book: book({ current_progress: 105, target_date: "2026-12-03" }), today });
+    expect(drop).toMatchObject({ tomorrow: 30, needed: 5, percentage: 50 });
+  });
+
+  // 300 over 7 days asks 43 (42.9 rounded up); 294 left would ask 42.
+  it("follows the rounding up of an uneven pace", () => {
+    const drop = tomorrowGoalDrop({ book: book({ target_date: "2026-11-30" }), today });
+    expect(drop?.tomorrow).toBe(43);
+    expect(drop?.droppedTo).toBe(42);
+    expect(drop?.needed).toBe(6);
+    expect(drop?.percentage).toBeCloseTo(100 / 7);
+  });
+
+  it("uses the tenth-of-what's-left fallback without a target date", () => {
+    expect(tomorrowGoalDrop({ book: book({}), today })).toMatchObject({ tomorrow: 30, droppedTo: 29, needed: 10 });
+  });
+
+  // With the target today or past, tomorrow asks for everything left.
+  it("drops by one per unit read when tomorrow asks for everything left", () => {
+    expect(tomorrowGoalDrop({ book: book({ target_date: "2026-11-23" }), today })).toMatchObject({
+      tomorrow: 300,
+      droppedTo: 299,
+      needed: 1,
+    });
+  });
+
+  it("is null once the book is finished", () => {
+    expect(tomorrowGoalDrop({ book: book({ current_progress: 400 }), today })).toBeNull();
   });
 });

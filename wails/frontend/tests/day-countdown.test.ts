@@ -83,10 +83,25 @@ describe("DayCountdown", () => {
     expect(percent.getByText(/next 1% due/i)).toBeTruthy();
   });
 
-  it("says the goal is met instead of counting down once today's goal is reached", () => {
-    const { container } = renderCountdown({ goalEnd: 100 });
-    expect(value(container, "next-due")).toBe("Goal met");
-    expect(paceText(container)).toBe("\u2014");
+  // Once today's goal is met there's nothing left to count down; the row
+  // instead shows how much more reading would trim tomorrow's goal by one.
+  describe("once today's goal is met", () => {
+    // 500 left with no target date: tomorrow asks a tenth, 50; 490 left would ask 49.
+    it("replaces the countdowns with Goal met and what would lower tomorrow's goal", () => {
+      const { container, getByText } = renderCountdown({ goalEnd: 100 });
+      expect(getByText("Goal met")).toBeTruthy();
+      for (const metric of ["day-left", "next-due", "pace", "remaining"]) {
+        expect(container.querySelector(`[data-metric="${metric}"]`)).toBeNull();
+      }
+      expect(value(container, "tomorrow-drop")).toBe("10");
+      expect(getByText(/pages until tomorrow's goal drops to 49/i)).toBeTruthy();
+      expect(container.querySelector('[data-metric="tomorrow-drop-bar"] .progress-bar')).not.toBeNull();
+    });
+
+    it("names the book's own unit", () => {
+      const { getByText } = renderCountdown({ goalEnd: 100, progressType: "location" });
+      expect(getByText(/locations until tomorrow's goal drops to/i)).toBeTruthy();
+    });
   });
 
   // The deadline is fixed when set, so it counts down in real time, while the
@@ -193,14 +208,15 @@ describe("DayCountdown", () => {
     expect(percent.getByText(/percent left today/i)).toBeTruthy();
   });
 
-  it("counts down as progress is logged and never goes below zero", async () => {
-    const { container, rerender } = renderCountdown({ goalEnd: 110 });
+  it("counts down as progress is logged, switching to Goal met once past the goal", async () => {
+    const { container, rerender, getByText } = renderCountdown({ goalEnd: 110 });
     await rerender({ book: { ...makeBook(), current_progress: 101 } });
     flushSync();
     expect(value(container, "remaining")).toBe("9");
     await rerender({ book: { ...makeBook(), current_progress: 115 } });
     flushSync();
-    expect(value(container, "remaining")).toBe("0");
+    expect(container.querySelector('[data-metric="remaining"]')).toBeNull();
+    expect(getByText("Goal met")).toBeTruthy();
   });
 
   it("stops the clock when removed", () => {

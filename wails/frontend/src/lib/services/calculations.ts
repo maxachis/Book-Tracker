@@ -170,6 +170,22 @@ export function dailyGoalPercentage(currentProgress: number, goal: DailyGoal): n
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
+/** Without a target date, each day's goal is a tenth of what's left: spread over 10 days. */
+const FALLBACK_DAYS = 1 / DEFAULT_DAILY_GOAL_FRACTION;
+
+/**
+ * How many days what's left is spread over from tomorrow: through the target
+ * date inclusive, 1 if the target is today or past (everything is due), or
+ * the tenth-a-day fallback without a target.
+ */
+function daysFromTomorrow({ book, today }: { book: Book; today: Date }): number {
+  if (!book.target_date) return FALLBACK_DAYS;
+  const [year, month, day] = book.target_date.split("-").map(Number);
+  const target = new Date(year, month - 1, day);
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return Math.max(1, Math.round((target.getTime() - startOfToday.getTime()) / MS_PER_DAY));
+}
+
 /**
  * What tomorrow's goal will ask for: what's left spread evenly over tomorrow
  * through the target date (everything, if the target is today or past), or the
@@ -178,12 +194,36 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 export function tomorrowGoalAmount({ book, today }: { book: Book; today: Date }): number {
   const remaining = Math.max(0, book.total_progress - book.current_progress);
   if (remaining === 0) return 0;
-  if (!book.target_date) return Math.max(1, Math.ceil(remaining * DEFAULT_DAILY_GOAL_FRACTION));
-  const [year, month, day] = book.target_date.split("-").map(Number);
-  const target = new Date(year, month - 1, day);
-  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  // Tomorrow through the target date, inclusive.
-  const daysFromTomorrow = Math.round((target.getTime() - startOfToday.getTime()) / MS_PER_DAY);
-  if (daysFromTomorrow <= 0) return remaining;
-  return Math.ceil(remaining / daysFromTomorrow);
+  return Math.ceil(remaining / daysFromTomorrow({ book, today }));
+}
+
+export interface TomorrowGoalDrop {
+  /** What tomorrow's goal asks for now. */
+  tomorrow: number;
+  /** What it would ask for after reading `needed` more today. */
+  droppedTo: number;
+  /** Units still to read today for tomorrow's goal to drop by one. */
+  needed: number;
+  /** How far through the current stretch (one unit of tomorrow's goal) today's reading is, 0–100. */
+  percentage: number;
+}
+
+/**
+ * How much more reading today lowers tomorrow's goal by one whole unit.
+ * Tomorrow asks for ceil(left / days), so it stays the same while what's left
+ * is within one stretch of `days` units; finishing the stretch drops it by one.
+ * Null once the book is finished.
+ */
+export function tomorrowGoalDrop({ book, today }: { book: Book; today: Date }): TomorrowGoalDrop | null {
+  const remaining = Math.max(0, book.total_progress - book.current_progress);
+  if (remaining === 0) return null;
+  const days = daysFromTomorrow({ book, today });
+  const tomorrow = Math.ceil(remaining / days);
+  const stretchEnd = (tomorrow - 1) * days;
+  return {
+    tomorrow,
+    droppedTo: tomorrow - 1,
+    needed: remaining - stretchEnd,
+    percentage: ((tomorrow * days - remaining) / days) * 100,
+  };
 }

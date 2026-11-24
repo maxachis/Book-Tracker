@@ -11,6 +11,7 @@ Tests for the reading goal calculation and statistics services.
 - **formatProgress**: Tests formatting of progress display strings.
 - **getProgressPercentage**: Tests percentage calculation for book progress.
 - **tomorrowGoalAmount**: Verifies tomorrow's amount spreads what's left over tomorrow through the target date (rounded up), asks for everything when the target is today or past, falls back to a tenth of what's left without a target, and is zero for a finished book.
+- **tomorrowGoalDrop**: Verifies how much more reading today lowers tomorrow's goal by one whole unit and how far through that stretch today's reading is, for an even target-date pace, an uneven one rounded up, the no-target fallback, a target today or past (every unit counts), and nothing once the book is finished.
 
 ## dates.test.ts
 
@@ -109,7 +110,7 @@ Tests for the end-of-day countdown math.
 
 Tests for the countdown row on the book card.
 
-- **DayCountdown**: Verifies it shows the time left until the end of the reading day and until the next unit is due, ticks every second, names the unit for each tracking type, says "Goal met" once today's goal is reached, and stops its clock when removed. The next-due deadline counts down in real time beside a live "1 page every …" pace, and a new deadline starts when the old one passes without progress or when progress is logged. It also shows how much is left for today's goal in the book's own unit (pages, locations or percent), never below zero. For locations it counts down to the next checkpoint, every location step (100 by default) from the goal's start: logging less than that keeps the deadline, reaching it starts the next, and a missed one restarts toward the same checkpoint. A different step changes the checkpoint, the labels and the pace, and changing it starts a new countdown.
+- **DayCountdown**: Verifies it shows the time left until the end of the reading day and until the next unit is due, ticks every second, names the unit for each tracking type, and stops its clock when removed. Once today's goal is met the whole row is replaced by "Goal met", a bar through the current stretch and how many more units (in the book's own unit) would lower tomorrow's goal by one. The next-due deadline counts down in real time beside a live "1 page every …" pace, and a new deadline starts when the old one passes without progress or when progress is logged. It also shows how much is left for today's goal in the book's own unit (pages, locations or percent), switching to Goal met once past it. For locations it counts down to the next checkpoint, every location step (100 by default) from the goal's start: logging less than that keeps the deadline, reaching it starts the next, and a missed one restarts toward the same checkpoint. A different step changes the checkpoint, the labels and the pace, and changing it starts a new countdown.
 
 ## calendar.test.ts
 

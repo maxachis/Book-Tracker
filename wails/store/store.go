@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/maxachis/book-tracker/wails/migrations"
 
@@ -16,9 +17,15 @@ type Store struct {
 	DB *sql.DB
 }
 
+// busyTimeoutMS is how long a write waits for another connection's write to
+// finish before giving up with "database is locked". The frontend fires saves
+// concurrently (e.g. a default goal for every book on load), and each one
+// runs on its own pooled connection.
+const busyTimeoutMS = 5000
+
 // Open returns a Store backed by the given DSN. Pass ":memory:" for tests.
 func Open(dsn string) (*Store, error) {
-	db, err := sql.Open("sqlite", dsn)
+	db, err := sql.Open("sqlite", withBusyTimeout(dsn))
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite %s: %w", dsn, err)
 	}
@@ -27,6 +34,16 @@ func Open(dsn string) (*Store, error) {
 		return nil, err
 	}
 	return &Store{DB: db}, nil
+}
+
+// withBusyTimeout adds the busy_timeout pragma to the DSN so the driver sets
+// it on every pooled connection, not just the first.
+func withBusyTimeout(dsn string) string {
+	separator := "?"
+	if strings.Contains(dsn, "?") {
+		separator = "&"
+	}
+	return fmt.Sprintf("%s%s_pragma=busy_timeout(%d)", dsn, separator, busyTimeoutMS)
 }
 
 // DefaultDBPath returns the per-user location for the book-tracker DB file,

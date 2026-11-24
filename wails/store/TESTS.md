@@ -28,3 +28,4 @@
 - **TestSetDailyGoal**: Table-driven: a goal round-trips for its date, saving again for the same book and date replaces it, goals from other dates are excluded, and each book keeps its own goal.
 - **TestDeleteBook_RemovesDailyGoals**: Deleting a book also removes its saved goals (foreign keys are off, so cascade does not fire).
 - **TestDailyGoals_FileBacked_PersistsAcrossReopen**: A saved goal survives closing and reopening a file-backed DB.
+- **TestSetDailyGoal_ConcurrentSavesToFileAllSucceed**: Twenty goal saves fired at once against a file-backed DB all succeed, waiting their turn instead of failing with "database is locked" (the Reading tab saves every book's default goal at once on load).

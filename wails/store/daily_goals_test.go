@@ -1,8 +1,10 @@
 package store
 
 import (
+	"fmt"
 	"path/filepath"
 	"reflect"
+	"sync"
 	"testing"
 
 	"github.com/maxachis/book-tracker/wails/model"
@@ -134,5 +136,43 @@ func TestDailyGoals_FileBacked_PersistsAcrossReopen(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, []model.DailyGoal{goal}) {
 		t.Fatalf("want [%v], got %v", goal, got)
+	}
+}
+
+// Opening the Reading tab saves a default goal for every book at once, and
+// the app saves goals while other writes (progress, order) are in flight. A
+// save must wait its turn rather than fail with "database is locked".
+func TestSetDailyGoal_ConcurrentSavesToFileAllSucceed(t *testing.T) {
+	const writers = 20
+	s, err := Open(filepath.Join(t.TempDir(), "book-tracker.db"))
+	if err != nil {
+		t.Fatalf("open: %v", err)
+	}
+	t.Cleanup(func() { _ = s.Close() })
+
+	errs := make(chan error, writers)
+	var wg sync.WaitGroup
+	for i := range writers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			errs <- s.SetDailyGoal(model.DailyGoal{
+				BookID: fmt.Sprintf("book-%d", i), Date: "2026-11-24", Start: i, End: i + 10,
+			})
+		}()
+	}
+	wg.Wait()
+	close(errs)
+	for err := range errs {
+		if err != nil {
+			t.Errorf("concurrent save failed: %v", err)
+		}
+	}
+	got, err := s.GetDailyGoals("2026-11-24")
+	if err != nil {
+		t.Fatalf("get: %v", err)
+	}
+	if len(got) != writers {
+		t.Fatalf("want %d goals saved, got %d", writers, len(got))
 	}
 }

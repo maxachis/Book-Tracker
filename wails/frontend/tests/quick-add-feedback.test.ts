@@ -71,37 +71,33 @@ describe("QuickAddTile running count", () => {
 });
 
 // The slice of the bar a press just added lights up briefly, tying the press to the progress.
-describe("ProgressBar glow on increase", () => {
+describe("ProgressBar glow on change", () => {
   const glow = (c: HTMLElement) => c.querySelector<HTMLElement>(".progress-glow");
 
   it("does not glow when first shown", () => {
-    const { container } = render(ProgressBar, { props: { percentage: 10, glowOnIncrease: true } });
+    const { container } = render(ProgressBar, { props: { percentage: 10, glowOnChange: true } });
     expect(glow(container)).toBeNull();
   });
 
   it("highlights the slice just added", async () => {
-    const { container, rerender } = render(ProgressBar, { props: { percentage: 10, glowOnIncrease: true } });
-    await rerender({ percentage: 12, glowOnIncrease: true });
+    const { container, rerender } = render(ProgressBar, { props: { percentage: 10, glowOnChange: true } });
+    await rerender({ percentage: 12, glowOnChange: true });
     expect(glow(container)?.style.left).toBe("10%");
     expect(glow(container)?.style.width).toBe("2%");
   });
 
   it("grows one highlight across a burst, then lets it go", async () => {
-    const { container, rerender } = render(ProgressBar, { props: { percentage: 10, glowOnIncrease: true } });
-    await rerender({ percentage: 11, glowOnIncrease: true });
+    const { container, rerender } = render(ProgressBar, { props: { percentage: 10, glowOnChange: true } });
+    await rerender({ percentage: 11, glowOnChange: true });
     advance(200);
-    await rerender({ percentage: 12, glowOnIncrease: true });
+    await rerender({ percentage: 12, glowOnChange: true });
     expect(glow(container)?.style.left).toBe("10%");
     expect(glow(container)?.style.width).toBe("2%");
     advance(2000);
     expect(glow(container)).toBeNull();
   });
 
-  it("does not glow when progress goes down or when glowing is off", async () => {
-    const down = render(ProgressBar, { props: { percentage: 10, glowOnIncrease: true } });
-    await down.rerender({ percentage: 8, glowOnIncrease: true });
-    expect(glow(down.container)).toBeNull();
-    down.unmount();
+  it("does not glow when glowing is off", async () => {
     const off = render(ProgressBar, { props: { percentage: 10 } });
     await off.rerender({ percentage: 12 });
     expect(glow(off.container)).toBeNull();

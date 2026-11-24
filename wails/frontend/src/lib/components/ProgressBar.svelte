@@ -2,13 +2,13 @@
   interface Props {
     percentage: number;
     showLabel?: boolean;
-    /** Light up the slice just added whenever the bar grows. */
-    glowOnIncrease?: boolean;
+    /** Light up the slice just added (or show the slice just removed) when the bar changes. */
+    glowOnChange?: boolean;
   }
 
-  let { percentage, showLabel = true, glowOnIncrease = false }: Props = $props();
+  let { percentage, showLabel = true, glowOnChange = false }: Props = $props();
 
-  /** How long a highlight lasts; growth within it extends the same highlight. */
+  /** How long a highlight lasts; changes within it extend the same highlight. */
   const GLOW_MS = 900;
   /** So a tiny step (one page of a long book) still shows a visible sliver. */
   const MIN_GLOW_WIDTH_PCT = 0.6;
@@ -20,14 +20,20 @@
   let glow = $state<{ from: number; to: number; key: number } | null>(null);
   let glowTimer: ReturnType<typeof setTimeout> | undefined;
 
+  // The highlight spans from where the burst of changes began to where the
+  // bar is now: added ground glows bright, removed ground shows as a fading ghost.
   $effect.pre(() => {
     const current = clampedPercentage;
-    const grew = current > previous;
+    const changed = current !== previous;
     const from = glow?.from ?? previous;
     previous = current;
-    if (!glowOnIncrease || !grew) return;
-    glow = { from, to: current, key: (glow?.key ?? 0) + 1 };
+    if (!glowOnChange || !changed) return;
     clearTimeout(glowTimer);
+    if (current === from) {
+      glow = null;
+      return;
+    }
+    glow = { from, to: current, key: (glow?.key ?? 0) + 1 };
     glowTimer = setTimeout(() => (glow = null), GLOW_MS);
   });
 
@@ -47,8 +53,9 @@
       {#key glow.key}
         <div
           class="progress-glow"
-          style:left="{glow.from}%"
-          style:width="{Math.max(MIN_GLOW_WIDTH_PCT, glow.to - glow.from)}%"
+          class:removed={glow.to < glow.from}
+          style:left="{Math.min(glow.from, glow.to)}%"
+          style:width="{Math.max(MIN_GLOW_WIDTH_PCT, Math.abs(glow.to - glow.from))}%"
         ></div>
       {/key}
     {/if}
@@ -94,6 +101,14 @@
     box-shadow: 0 0 10px 2px rgba(240, 215, 140, 0.9);
     pointer-events: none;
     animation: glow-fade 900ms ease-out forwards;
+  }
+
+  /* The slice a press just took back: a dim ghost of what was there. */
+  .progress-glow.removed {
+    background: rgba(212, 185, 120, 0.28);
+    box-shadow: none;
+    outline: 1px dashed rgba(240, 215, 140, 0.55);
+    outline-offset: -1px;
   }
 
   @keyframes glow-fade {

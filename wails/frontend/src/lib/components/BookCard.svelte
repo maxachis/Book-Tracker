@@ -170,14 +170,18 @@
     await submitProgressUpdate(newProgress);
   }
 
-  async function handleQuickAdd() {
-    if (isUpdating || book.current_progress >= book.total_progress) {
+  /** Applies a +/- adjustment from the tile, kept within 0 and the book's end. */
+  async function adjustProgress(delta: number) {
+    const nextProgress = Math.min(Math.max(book.current_progress + delta, 0), book.total_progress);
+    if (isUpdating || nextProgress === book.current_progress) {
       return;
     }
-    const nextProgress = Math.min(book.current_progress + 1, book.total_progress);
     progressInput = nextProgress;
     await submitProgressUpdate(nextProgress);
   }
+
+  /** Locations come in the hundreds, so only there does holding the tile repeat. */
+  const repeatOnHold = $derived(book.progress_type === "location");
 
   function handleDelete() {
     if (confirm(`Are you sure you want to delete "${book.title}"?`)) {
@@ -224,7 +228,7 @@
       <div class="progress-panel panel-overall">
         <h4 class="panel-title">Overall Progress</h4>
         <div class="book-progress">
-          <ProgressBar {percentage} showLabel={false} glowOnIncrease />
+          <ProgressBar {percentage} showLabel={false} glowOnChange />
           <p class="progress-text">
             {#if book.progress_type === "percentage"}
               <BumpNumber value={book.current_progress} />%
@@ -279,8 +283,13 @@
             <QuickAddTile
               label={quickAddLabel}
               unit={QUICK_ADD_UNIT[book.progress_type]}
-              onAdd={handleQuickAdd}
+              onAdd={(amount) => adjustProgress(amount)}
+              onRemove={(amount) => adjustProgress(-amount)}
+              maxAdd={book.total_progress - book.current_progress}
+              maxRemove={book.current_progress}
+              {repeatOnHold}
               disabled={isUpdating || book.current_progress >= book.total_progress}
+              removeDisabled={isUpdating || book.current_progress <= 0}
             />
           </div>
         </div>
@@ -289,7 +298,7 @@
       <div class="progress-panel panel-daily">
         <h4 class="panel-title">Daily Goal</h4>
         <div class="book-progress">
-          <ProgressBar percentage={dailyGoalPercentage} showLabel={false} glowOnIncrease />
+          <ProgressBar percentage={dailyGoalPercentage} showLabel={false} glowOnChange />
           <p class="progress-text">
             <BumpNumber value={book.current_progress - dailyGoal.start} /> / {dailyGoal.end - dailyGoal.start} {progressLabel}
           </p>

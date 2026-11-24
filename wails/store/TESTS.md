@@ -24,3 +24,7 @@
 - **TestSetBookOrder**: Table-driven: order round-trips as given, a second save fully replaces the first, empty/nil clears the order, and unknown IDs are skipped without failing the save.
 - **TestDeleteBook_RemovesFromBookOrder**: Deleting a book also removes it from the saved order (foreign keys are off, so cascade does not fire).
 - **TestBookOrder_FileBacked_PersistsAcrossReopen**: A saved order survives closing and reopening a file-backed DB.
+- **TestGetDailyGoals_EmptyReturnsNonNilSlice**: With no saved goals, GetDailyGoals returns an empty non-nil slice so the frontend never receives null.
+- **TestSetDailyGoal**: Table-driven: a goal round-trips for its date, saving again for the same book and date replaces it, goals from other dates are excluded, and each book keeps its own goal.
+- **TestDeleteBook_RemovesDailyGoals**: Deleting a book also removes its saved goals (foreign keys are off, so cascade does not fire).
+- **TestDailyGoals_FileBacked_PersistsAcrossReopen**: A saved goal survives closing and reopening a file-backed DB.

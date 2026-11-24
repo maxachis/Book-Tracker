@@ -7,6 +7,8 @@ import {
   getDailyReadingSummary,
   getBookOrder,
   setBookOrder,
+  getDailyGoals,
+  saveDailyGoal,
 } from "../services/database";
 import { applyCustomOrder } from "../services/ordering";
 import { calculateStatistics } from "../services/calculations";
@@ -44,13 +46,15 @@ class AppState {
     this.error = null;
     try {
       const today = localDateISO();
-      const [activeBooks, completedBooks, settings, dailySummary, customOrder] = await Promise.all([
+      const [activeBooks, completedBooks, settings, dailySummary, customOrder, dailyGoals] = await Promise.all([
         getActiveBooks(),
         getCompletedBooks(),
         getSettings(),
         getDailyReadingSummary(today),
         getBookOrder(),
+        getDailyGoals(today),
       ]);
+      this.dailyGoals = dailyGoals;
       this.books = activeBooks;
       this.completedBooks = completedBooks;
       this.settings = settings;
@@ -118,10 +122,16 @@ class AppState {
     return this.dailyGoals.get(bookId);
   }
 
-  setDailyGoal(bookId: string, goal: DailyGoal) {
+  /** Updates the goal immediately, then saves it for today (best effort). */
+  async setDailyGoal(bookId: string, goal: DailyGoal) {
     const newMap = new Map(this.dailyGoals);
     newMap.set(bookId, goal);
     this.dailyGoals = newMap;
+    try {
+      await saveDailyGoal({ bookId, date: localDateISO(), goal });
+    } catch (e) {
+      this.error = e instanceof Error ? e.message : "Failed to save daily goal";
+    }
   }
 }
 

@@ -5,6 +5,8 @@
   import DayCountdown from "./DayCountdown.svelte";
   import EditableField from "./EditableField.svelte";
   import Dropdown from "./Dropdown.svelte";
+  import QuickAddTile from "./QuickAddTile.svelte";
+  import BumpNumber from "./BumpNumber.svelte";
   import DateField from "./DateField.svelte";
   import {
     formatProgress,
@@ -60,6 +62,13 @@
     return "+1 page";
   });
 
+  /** The small word under the tile's "+1". */
+  const QUICK_ADD_UNIT: Record<ProgressType, string> = {
+    page: "page",
+    location: "location",
+    percentage: "percent",
+  };
+
   const endLabel = $derived.by(() => {
     if (book.progress_type === "percentage") return "End percentage";
     if (book.progress_type === "location") return "End location";
@@ -105,9 +114,6 @@
 
   const dailyGoalPercentage = $derived(computeDailyGoalPercentage(book.current_progress, dailyGoal));
 
-  const dailyGoalProgressText = $derived(
-    `${book.current_progress - dailyGoal.start} / ${dailyGoal.end - dailyGoal.start} ${progressLabel}`
-  );
 
   function updateDailyGoalStart(newStart: number) {
     appState.setDailyGoal(book.id, { start: newStart, end: dailyGoal.end });
@@ -198,39 +204,45 @@
       <div class="progress-panel panel-overall">
         <h4 class="panel-title">Overall Progress</h4>
         <div class="book-progress">
-          <ProgressBar {percentage} showLabel={false} />
-          <p class="progress-text">{progressText}</p>
+          <ProgressBar {percentage} showLabel={false} glowOnIncrease />
+          <p class="progress-text">
+            {#if book.progress_type === "percentage"}
+              <BumpNumber value={book.current_progress} />%
+            {:else}
+              <BumpNumber value={book.current_progress} /> / {book.total_progress} {progressLabel}
+            {/if}
+          </p>
         </div>
-        <div class="progress-input-group">
-          <label for="progress-{book.id}">Update</label>
-          <div class="input-with-suffix">
-            <input
-              id="progress-{book.id}"
-              type="number"
-              bind:value={progressInput}
-              min="0"
-              max={book.total_progress}
-              disabled={isUpdating}
-              onchange={handleProgressChange}
-            />
-            <span class="input-suffix">
-              /
-              {#if onFieldUpdate}
-                <EditableField
-                  value={String(book.total_progress)}
-                  label={endLabel}
-                  inputType="number"
-                  min={1}
-                  required
-                  onSave={saveTotal}
-                />
-              {:else}
-                {book.total_progress}
-              {/if}
-            </span>
+        <div class="overall-controls" class:with-tracking={!!onFieldUpdate}>
+          <div class="progress-input-group">
+            <label for="progress-{book.id}">Update</label>
+            <div class="input-with-suffix">
+              <input
+                id="progress-{book.id}"
+                type="number"
+                bind:value={progressInput}
+                min="0"
+                max={book.total_progress}
+                disabled={isUpdating}
+                onchange={handleProgressChange}
+              />
+              <span class="input-suffix">
+                /
+                {#if onFieldUpdate}
+                  <EditableField
+                    value={String(book.total_progress)}
+                    label={endLabel}
+                    inputType="number"
+                    min={1}
+                    required
+                    onSave={saveTotal}
+                  />
+                {:else}
+                  {book.total_progress}
+                {/if}
+              </span>
+            </div>
           </div>
-        </div>
-        <div class="quick-add-row" class:with-tracking={!!onFieldUpdate}>
           {#if onFieldUpdate}
             <div class="tracking">
               <span aria-hidden="true">Tracking</span>
@@ -243,21 +255,24 @@
               />
             </div>
           {/if}
-          <button
-            class="btn-reset btn-quick-add"
-            onclick={handleQuickAdd}
-            disabled={isUpdating || book.current_progress >= book.total_progress}
-          >
-            {quickAddLabel}
-          </button>
+          <div class="quick-add-cell">
+            <QuickAddTile
+              label={quickAddLabel}
+              unit={QUICK_ADD_UNIT[book.progress_type]}
+              onAdd={handleQuickAdd}
+              disabled={isUpdating || book.current_progress >= book.total_progress}
+            />
+          </div>
         </div>
       </div>
 
       <div class="progress-panel panel-daily">
         <h4 class="panel-title">Daily Goal</h4>
         <div class="book-progress">
-          <ProgressBar percentage={dailyGoalPercentage} showLabel={false} />
-          <p class="progress-text">{dailyGoalProgressText}</p>
+          <ProgressBar percentage={dailyGoalPercentage} showLabel={false} glowOnIncrease />
+          <p class="progress-text">
+            <BumpNumber value={book.current_progress - dailyGoal.start} /> / {dailyGoal.end - dailyGoal.start} {progressLabel}
+          </p>
         </div>
         <div class="daily-goal-inputs">
           <div class="daily-goal-input-group">
@@ -497,14 +512,23 @@
     white-space: nowrap;
   }
 
-  .quick-add-row {
-    display: flex;
-    justify-content: flex-end;
+  /* Update and Tracking stack on the left; the +1 tile fills the right. */
+  .overall-controls {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    column-gap: 0.75rem;
+    row-gap: 0.6rem;
+    align-items: center;
   }
 
-  .quick-add-row.with-tracking {
-    justify-content: space-between;
-    align-items: center;
+  .quick-add-cell {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: stretch;
+  }
+
+  .overall-controls.with-tracking .quick-add-cell {
+    grid-row: 1 / span 2;
   }
 
   .tracking {
@@ -518,10 +542,6 @@
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-  }
-
-  .btn-quick-add {
-    align-self: flex-end;
   }
 
   .daily-goal-inputs {

@@ -37,3 +37,12 @@ CREATE TABLE IF NOT EXISTS book_order (
     book_id TEXT PRIMARY KEY REFERENCES books(id) ON DELETE CASCADE,
     position INTEGER NOT NULL
 );
+
+-- Migration 6: per-book daily reading goal, one row per book per local date
+CREATE TABLE IF NOT EXISTS daily_goals (
+    book_id TEXT NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    date TEXT NOT NULL,
+    start_progress INTEGER NOT NULL,
+    end_progress INTEGER NOT NULL,
+    PRIMARY KEY (book_id, date)
+);

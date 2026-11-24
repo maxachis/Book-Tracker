@@ -12,6 +12,8 @@ import {
   GetDailyReadingSummary,
   GetBookOrder,
   SetBookOrder,
+  GetDailyGoals,
+  SetDailyGoal,
 } from "../../../wailsjs/go/main/App";
 import type {
   Book,
@@ -20,6 +22,7 @@ import type {
   UserSettings,
   UpdateSettingsRequest,
   DailyReadingSummary,
+  DailyGoal,
 } from "../types";
 
 function normalizeBook(b: any): Book {
@@ -115,4 +118,19 @@ export async function getDailyReadingSummary(date: string): Promise<DailyReading
       progress_type: b.progress_type,
     })),
   };
+}
+
+/** Goals saved for a local date, keyed by book ID. */
+export async function getDailyGoals(date: string): Promise<Map<string, DailyGoal>> {
+  const raw = (await GetDailyGoals(date)) ?? [];
+  return new Map(raw.map((g) => [g.book_id, { start: g.start, end: g.end }]));
+}
+
+export async function saveDailyGoal(options: {
+  bookId: string;
+  date: string;
+  goal: DailyGoal;
+}): Promise<void> {
+  const { bookId, date, goal } = options;
+  await SetDailyGoal({ book_id: bookId, date, start: goal.start, end: goal.end });
 }

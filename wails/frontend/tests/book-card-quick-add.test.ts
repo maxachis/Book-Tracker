@@ -41,22 +41,15 @@ function renderCard(book: Book, onProgressUpdate = vi.fn().mockResolvedValue(und
 }
 
 describe("BookCard quick-add", () => {
-  it("renders quick-add button below update control in overall progress panel", () => {
+  // The quick-add is a large tile beside the update and tracking controls,
+  // filling the panel's spare space and easy to hit repeatedly.
+  it("shows the quick-add as a tile beside the update control in the overall panel", () => {
     const { container, getByRole } = renderCard(createBook({ progress_type: "location" }));
-
-    const overallPanel = container.querySelector(".panel-overall");
-    const updateGroup = overallPanel?.querySelector(".progress-input-group");
-    const quickAddRow = overallPanel?.querySelector(".quick-add-row");
-    const quickAddButton = getByRole("button", { name: "+1 location" });
-
-    expect(overallPanel).toBeTruthy();
-    expect(updateGroup).toBeTruthy();
-    expect(quickAddRow).toBeTruthy();
-    expect(quickAddButton).toBeTruthy();
-    expect(quickAddRow?.contains(quickAddButton)).toBe(true);
-    expect(updateGroup?.compareDocumentPosition(quickAddRow as Node)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING
-    );
+    const controls = container.querySelector(".panel-overall .overall-controls");
+    const tile = getByRole("button", { name: "+1 location" });
+    expect(controls?.querySelector(".progress-input-group")).toBeTruthy();
+    expect(controls?.contains(tile)).toBe(true);
+    expect(tile.classList.contains("quick-add-tile")).toBe(true);
   });
 
   it("increments progress by one unit when current progress is below total", async () => {

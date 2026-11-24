@@ -26,6 +26,10 @@ export function GetBookOrder() {
   return window['go']['main']['App']['GetBookOrder']();
 }
 
+export function GetDailyGoals(arg1) {
+  return window['go']['main']['App']['GetDailyGoals'](arg1);
+}
+
 export function GetDailyReadingSummary(arg1) {
   return window['go']['main']['App']['GetDailyReadingSummary'](arg1);
 }
@@ -72,6 +76,10 @@ export function SaveCSVFile(arg1, arg2) {
 
 export function SetBookOrder(arg1) {
   return window['go']['main']['App']['SetBookOrder'](arg1);
+}
+
+export function SetDailyGoal(arg1) {
+  return window['go']['main']['App']['SetDailyGoal'](arg1);
 }
 
 export function UpdateBook(arg1) {

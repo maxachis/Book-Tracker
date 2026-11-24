@@ -26,3 +26,5 @@
 - **TestUpdateBook_AccumulatesSessionOnSameDay**: Two progress updates on the same day sum their deltas into a single session row.
 - **TestUpdateBook_NegativeDeltaNotRecorded**: Progress decreases (re-reads, corrections) are not subtracted from the day's session.
 - **TestUpdateBook_NoSessionWhenProgressUnchanged**: A zero-delta update (no `current_progress` change) does not create a session row.
+- **TestSetDailyGoal_Validation**: Table-driven: valid, empty-range and end-before-start goals are saved (the last happens mid-edit); malformed or empty dates, and a missing book ID are rejected.
+- **TestGetDailyGoals_Validation**: Table-driven: a valid date returns a non-nil slice; malformed or empty dates are rejected.

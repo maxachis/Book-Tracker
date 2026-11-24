@@ -121,3 +121,19 @@ Tests for the calendar panel used to choose a book's target date.
 - **DatePicker selection**: Verifies clicking any day (including an adjacent-month one) reports its ISO date, and that the chosen day and today are marked.
 - **DatePicker marked dates**: Verifies days other books target get the marked class, a "Target for: ..." tooltip and a screen-reader suffix, that unmarked days get none, and that the marker survives on selected or today cells.
 - **DatePicker keyboard**: Verifies a single roving tab stop (selected day, else today, else the 1st), arrow/Page/Home/End movement that follows month boundaries and moves DOM focus, Enter/Space selecting, and Escape calling onClose.
+
+## book-card-quick-add.test.ts
+
+Tests for the +1 button on the Reading tab card.
+
+- **BookCard quick-add**: Verifies the +1 is a tile beside the Update and Tracking controls, adds one unit per press, stops at the end of the book (and is disabled there), is disabled while a save is in flight, and is labelled for the book's unit (e.g. "+1%").
+
+## quick-add-feedback.test.ts
+
+Tests for the feedback shown when progress is logged, kept light because pages are often logged in quick bursts.
+
+- **QuickAddTile running count**: Verifies each press adds one unit, a burst of presses shows a single running count ("+3"), the count clears a moment after the last press and restarts at +1, and presses while disabled are not counted.
+- **ProgressBar glow on increase**: Verifies the slice a bar just gained lights up, a burst grows one highlight that then disappears, and there is no glow on first show, when progress drops, or when glowing is off.
+- **BumpNumber**: Verifies the number lifts when it changes but not when first shown.
+- **BookCard +1 feedback**: Verifies that when progress goes up, both the overall and daily bars glow and both counts lift.
+- **Daily goal persistence** (`daily-goal-persistence.test.ts`): Verifies a stored goal for today is what state shows after load (not a fresh default from current progress), goals saved for other dates are ignored, a newly created default goal is saved under today's date, setting a goal saves it under today's date, and a failed save keeps the goal in view while reporting an error.

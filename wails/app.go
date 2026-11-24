@@ -75,6 +75,16 @@ func (a *App) SetBookOrder(ids []string) error {
 	return a.service.Store.SetBookOrder(ids)
 }
 
+// GetDailyGoals returns the goals saved for a local date (YYYY-MM-DD).
+func (a *App) GetDailyGoals(date string) ([]model.DailyGoal, error) {
+	return a.service.GetDailyGoals(date)
+}
+
+// SetDailyGoal saves a book's goal for a local date.
+func (a *App) SetDailyGoal(goal model.DailyGoal) error {
+	return a.service.SetDailyGoal(goal)
+}
+
 func (a *App) MarkBookComplete(id string) (model.Book, error) {
 	return a.service.MarkBookComplete(id)
 }

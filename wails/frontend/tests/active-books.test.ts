@@ -18,6 +18,8 @@ vi.mock("../wailsjs/go/main/App", () => {
     GetSettings: () => ok({ id: 1, reading_start_hour: 8, reading_end_hour: 22, stats_start_date: null }),
     GetDailyReadingSummary: (date: string) => ok({ date, books: [] }),
     GetBookOrder: () => ok(backend.order),
+    GetDailyGoals: () => ok([]),
+    SetDailyGoal: () => ok(undefined),
     CreateBook: (req: Omit<Book, "id" | "current_progress" | "completed_at" | "created_at">) => {
       backend.createBook(req);
       const created: Book = {

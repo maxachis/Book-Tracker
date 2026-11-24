@@ -77,6 +77,9 @@ func (s *Store) DeleteBook(id string) error {
 	if _, err := tx.Exec(`DELETE FROM book_order WHERE book_id = ?`, id); err != nil {
 		return fmt.Errorf("delete book order %s: %w", id, err)
 	}
+	if _, err := tx.Exec(`DELETE FROM daily_goals WHERE book_id = ?`, id); err != nil {
+		return fmt.Errorf("delete daily goals %s: %w", id, err)
+	}
 	if _, err := tx.Exec(`DELETE FROM books WHERE id = ?`, id); err != nil {
 		return fmt.Errorf("delete book %s: %w", id, err)
 	}

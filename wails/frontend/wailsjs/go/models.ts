@@ -90,6 +90,24 @@ export namespace model {
 	        this.progress_type = source["progress_type"];
 	    }
 	}
+	export class DailyGoal {
+	    book_id: string;
+	    date: string;
+	    start: number;
+	    end: number;
+
+	    static createFrom(source: any = {}) {
+	        return new DailyGoal(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.book_id = source["book_id"];
+	        this.date = source["date"];
+	        this.start = source["start"];
+	        this.end = source["end"];
+	    }
+	}
 	export class DailyReadingSummary {
 	    date: string;
 	    books: BookSessionSummary[];

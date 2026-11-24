@@ -108,6 +108,14 @@
       <span class="book-count">{appState.orderedBooks.length} book{appState.orderedBooks.length !== 1 ? "s" : ""}</span>
     </div>
     <div class="header-actions">
+      {#if appState.sortedReadingBooks.length > 0}
+        <SortControls
+          sortConfig={appState.readingSort}
+          options={READING_SORT_OPTIONS}
+          onSort={handleSort}
+          showCaption={false}
+        />
+      {/if}
       <button class="btn-add" onclick={handleAddBook}>
         <span class="btn-icon">+</span>
         Add Book
@@ -123,11 +131,6 @@
   {:else}
     <div class="reading-layout">
       <aside class="sidebar">
-        <SortControls
-          sortConfig={appState.readingSort}
-          options={READING_SORT_OPTIONS}
-          onSort={handleSort}
-        />
         <BookSidebar
           books={appState.sortedReadingBooks}
           selectedId={selectedBook?.id ?? null}

@@ -7,9 +7,11 @@
     sortConfig: SortConfig<F>;
     options: SortOption<F>[];
     onSort: (config: SortConfig<F>) => void;
+    /** Show the "Sort" caption; without it, "Sort" is still the name and tooltip. */
+    showCaption?: boolean;
   }
 
-  let { sortConfig, options, onSort }: Props = $props();
+  let { sortConfig, options, onSort, showCaption = true }: Props = $props();
 
   function handleFieldChange(field: F) {
     onSort({ field, direction: sortConfig.direction });
@@ -31,8 +33,10 @@
 </script>
 
 <div class="sort-controls">
-  <div class="sort-label">
-    <span class="label-text" aria-hidden="true">Sort</span>
+  <div class="sort-label" title={showCaption ? undefined : "Sort"}>
+    {#if showCaption}
+      <span class="label-text" aria-hidden="true">Sort</span>
+    {/if}
     <Dropdown
       label="Sort"
       {options}

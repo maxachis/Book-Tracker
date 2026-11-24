@@ -124,6 +124,25 @@ describe("Reading tab", () => {
 // The reader can sort the list by a field, or keep the hand-arranged
 // ("Custom") order, which is the default.
 describe("Reading tab: sorting", () => {
+  // Sorting acts on the whole Reading list, so it lives in the page header
+  // with the other list-level action rather than inside the sidebar.
+  it("sits on the header row beside Add Book", () => {
+    const { getByRole } = render(ActiveBooks);
+    const actions = getByRole("button", { name: /Add Book/ }).closest(".header-actions");
+    expect(actions).not.toBeNull();
+    expect(actions!.contains(getByRole("combobox", { name: "Sort" }))).toBe(true);
+  });
+
+  // The header is tight, so the visible "Sort" caption is dropped; the
+  // control keeps "Sort" as its accessible name and hover tooltip.
+  it("shows no visible Sort caption but keeps the name and tooltip", () => {
+    const { container, getByRole } = render(ActiveBooks);
+    const header = container.querySelector(".header-actions")!;
+    expect(header.querySelector(".label-text")).toBeNull();
+    const control = getByRole("combobox", { name: "Sort" });
+    expect(control.closest("[title='Sort']")).not.toBeNull();
+  });
+
   it("starts in Custom order with no direction toggle", () => {
     const { getByRole, queryByRole } = render(ActiveBooks);
     expect(getByRole("combobox", { name: "Sort" }).textContent).toContain("Custom");

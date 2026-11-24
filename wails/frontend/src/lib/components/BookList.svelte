@@ -2,6 +2,7 @@
   import type { Book, UserSettings, SortConfig } from "../types";
   import BookCard from "./BookCard.svelte";
   import SortControls from "./SortControls.svelte";
+  import { FINISHED_SORT_OPTIONS } from "../services/sorting";
 
   interface Props {
     books: Book[];
@@ -31,7 +32,7 @@
 </script>
 
 <div class="book-list">
-  <SortControls {sortConfig} {onSort} />
+  <SortControls {sortConfig} options={FINISHED_SORT_OPTIONS} {onSort} />
 
   {#if books.length === 0}
     <div class="empty-state">

@@ -1,10 +1,19 @@
 <script lang="ts">
-  import type { Book, CreateBookRequest, DailyGoal, UpdateBookRequest } from "../lib/types";
+  import type {
+    Book,
+    CreateBookRequest,
+    DailyGoal,
+    ReadingSortField,
+    SortConfig,
+    UpdateBookRequest,
+  } from "../lib/types";
   import { appState } from "../lib/stores/state.svelte";
   import { createBook, updateBook, deleteBook, markBookComplete } from "../lib/services/database";
   import { defaultDailyGoal } from "../lib/services/calculations";
   import BookCard from "../lib/components/BookCard.svelte";
   import BookSidebar from "../lib/components/BookSidebar.svelte";
+  import SortControls from "../lib/components/SortControls.svelte";
+  import { CUSTOM_ORDER, READING_SORT_OPTIONS } from "../lib/services/sorting";
 
   /** What "Add Book" creates; the reader fills in the real details on the card. */
   const NEW_BOOK_DEFAULTS: CreateBookRequest = {
@@ -22,7 +31,7 @@
   // Until the reader picks one, show the top book. If the picked book is
   // completed or deleted it drops out of the list and this falls back too.
   const selectedBook = $derived(
-    appState.orderedBooks.find((b) => b.id === selectedId) ?? appState.orderedBooks[0]
+    appState.sortedReadingBooks.find((b) => b.id === selectedId) ?? appState.sortedReadingBooks[0]
   );
 
   // The sidebar shows today's goal for every book, so each needs one even
@@ -44,9 +53,19 @@
     selectedId = selectedBook?.id ?? null;
   }
 
+  // The sidebar reports the order as shown, so a move made while sorted
+  // becomes the new custom order.
   function handleReorder(bookIds: string[]) {
     pinShownBook();
+    if (appState.readingSort.field !== CUSTOM_ORDER) {
+      appState.setReadingSort({ ...appState.readingSort, field: CUSTOM_ORDER });
+    }
     void appState.reorderBooks(bookIds);
+  }
+
+  function handleSort(config: SortConfig<ReadingSortField>) {
+    pinShownBook();
+    appState.setReadingSort(config);
   }
 
   async function handleFieldUpdate(book: Book, changes: Omit<UpdateBookRequest, "id">) {
@@ -104,8 +123,13 @@
   {:else}
     <div class="reading-layout">
       <aside class="sidebar">
+        <SortControls
+          sortConfig={appState.readingSort}
+          options={READING_SORT_OPTIONS}
+          onSort={handleSort}
+        />
         <BookSidebar
-          books={appState.orderedBooks}
+          books={appState.sortedReadingBooks}
           selectedId={selectedBook?.id ?? null}
           getDailyGoal={dailyGoalFor}
           endHour={appState.settings.reading_end_hour}

@@ -1,4 +1,13 @@
-import type { Book, UserSettings, View, Statistics, DailyGoal, DailyReadingSummary } from "../types";
+import type {
+  Book,
+  UserSettings,
+  View,
+  Statistics,
+  DailyGoal,
+  DailyReadingSummary,
+  ReadingSortField,
+  SortConfig,
+} from "../types";
 import {
   getActiveBooks,
   getCompletedBooks,
@@ -11,7 +20,9 @@ import {
   saveDailyGoal,
 } from "../services/database";
 import { applyCustomOrder } from "../services/ordering";
-import { calculateStatistics } from "../services/calculations";
+import { calculateStatistics, defaultDailyGoal } from "../services/calculations";
+import { DEFAULT_READING_SORT, sortReadingBooks } from "../services/sorting";
+import { dueClock } from "./dueClock.svelte";
 import { localDateISO } from "../services/dates";
 
 class AppState {
@@ -26,6 +37,8 @@ class AppState {
   currentView = $state<View>("active");
   /** Book IDs in the reader's saved order. */
   customOrder = $state<string[]>([]);
+  /** How the Reading tab is sorted; kept for the session, not saved. */
+  readingSort = $state<SortConfig<ReadingSortField>>(DEFAULT_READING_SORT);
   isLoading = $state(true);
   error = $state<string | null>(null);
   dailyGoals = $state<Map<string, DailyGoal>>(new Map());
@@ -39,6 +52,28 @@ class AppState {
   /** Reading books in the reader's hand-arranged order (new books first). */
   get orderedBooks(): Book[] {
     return applyCustomOrder(this.books, this.customOrder);
+  }
+
+  /**
+   * Reading books as the sidebar lists them: the chosen sort over the custom
+   * order. Sorting by next page due re-reads the ticking clock, so the list
+   * re-sorts as countdowns restart.
+   */
+  get sortedReadingBooks(): Book[] {
+    return sortReadingBooks(this.orderedBooks, {
+      config: this.readingSort,
+      nextDueAt: (book) => this.#nextDueAt(book),
+    });
+  }
+
+  #nextDueAt(book: Book): Date | null {
+    const goal = this.getDailyGoal(book.id) ?? defaultDailyGoal(book, this.settings);
+    return dueClock.deadlineFor({
+      bookId: book.id,
+      remaining: goal.end - book.current_progress,
+      endHour: this.settings.reading_end_hour,
+      progressType: book.progress_type,
+    });
   }
 
   async loadData() {
@@ -108,6 +143,10 @@ class AppState {
     } catch (e) {
       this.error = e instanceof Error ? e.message : "Failed to save book order";
     }
+  }
+
+  setReadingSort(config: SortConfig<ReadingSortField>) {
+    this.readingSort = config;
   }
 
   setView(view: View) {

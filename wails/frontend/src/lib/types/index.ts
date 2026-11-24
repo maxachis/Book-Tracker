@@ -44,11 +44,18 @@ export interface UpdateSettingsRequest {
 }
 
 export type SortField = "target_date" | "title" | "progress" | "created_at";
+/** The Reading tab adds the hand-arranged order and urgency of the next page. */
+export type ReadingSortField = SortField | "custom" | "next_due";
 export type SortDirection = "asc" | "desc";
 
-export interface SortConfig {
-  field: SortField;
+export interface SortConfig<F extends string = SortField> {
+  field: F;
   direction: SortDirection;
+}
+
+export interface SortOption<F extends string = SortField> {
+  value: F;
+  label: string;
 }
 
 export type View = "active" | "completed" | "today" | "settings" | "import-export";

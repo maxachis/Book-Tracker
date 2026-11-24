@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, waitFor } from "@testing-library/svelte";
 import type { Book } from "../src/lib/types";
 
@@ -42,6 +42,7 @@ vi.mock("../wailsjs/go/main/App", () => {
 
 import ActiveBooks from "../src/views/ActiveBooks.svelte";
 import { appState } from "../src/lib/stores/state.svelte";
+import { resetDueClock } from "../src/lib/stores/dueClock.svelte";
 
 function book(id: string, created_at: string): Book {
   return {
@@ -62,8 +63,19 @@ beforeEach(async () => {
   backend.order = ["a", "b"];
   backend.setBookOrder.mockClear();
   backend.createBook.mockClear();
+  appState.setReadingSort({ field: "custom", direction: "asc" });
+  resetDueClock();
   await appState.loadData();
 });
+
+function sidebarTitles(container: HTMLElement): (string | null)[] {
+  return [...container.querySelectorAll(".sidebar-item .item-title")].map((el) => el.textContent);
+}
+
+async function chooseSort(getByRole: ReturnType<typeof render>["getByRole"], label: string) {
+  await fireEvent.click(getByRole("combobox", { name: "Sort" }));
+  await fireEvent.click(getByRole("option", { name: label }));
+}
 
 describe("Reading tab", () => {
   // The saved order (a, b) is oldest-first, the opposite of the newest-first
@@ -91,14 +103,6 @@ describe("Reading tab", () => {
     });
   });
 
-  // The reading order is whatever the reader arranged by hand; there is no
-  // other sort to switch to.
-  it("offers no sort control", () => {
-    const { queryByRole } = render(ActiveBooks);
-    expect(queryByRole("combobox", { name: "Sort" })).toBeNull();
-    expect(queryByRole("button", { name: /Ascending|Descending/ })).toBeNull();
-  });
-
   it("switches the card when another book is clicked", async () => {
     const { container, getByText } = render(ActiveBooks);
     await fireEvent.click(getByText("Book b"));
@@ -114,6 +118,68 @@ describe("Reading tab", () => {
       const titles = [...container.querySelectorAll(".sidebar-item .item-title")].map((el) => el.textContent);
       expect(titles).toEqual(["Book b", "Book a"]);
     });
+  });
+});
+
+// The reader can sort the list by a field, or keep the hand-arranged
+// ("Custom") order, which is the default.
+describe("Reading tab: sorting", () => {
+  it("starts in Custom order with no direction toggle", () => {
+    const { getByRole, queryByRole } = render(ActiveBooks);
+    expect(getByRole("combobox", { name: "Sort" }).textContent).toContain("Custom");
+    expect(queryByRole("button", { name: /Ascending|Descending/ })).toBeNull();
+  });
+
+  it("offers the previous sorts plus when the next page is due", async () => {
+    const { getByRole, getAllByRole } = render(ActiveBooks);
+    await fireEvent.click(getByRole("combobox", { name: "Sort" }));
+    const labels = getAllByRole("option").map((o) => o.textContent?.trim());
+    expect(labels).toEqual(["Custom", "Date Added", "Title", "Target Date", "Progress", "Next Page Due"]);
+  });
+
+  it("reorders the list by the chosen field and direction", async () => {
+    backend.order = ["b", "a"];
+    await appState.loadData();
+    const { container, getByRole } = render(ActiveBooks);
+    await chooseSort(getByRole, "Title");
+    expect(sidebarTitles(container)).toEqual(["Book a", "Book b"]);
+    await fireEvent.click(getByRole("button", { name: "Ascending" }));
+    expect(sidebarTitles(container)).toEqual(["Book b", "Book a"]);
+  });
+
+  // A bigger daily goal in the same time left means a shorter wait per page,
+  // so that book's next page is due sooner and it goes on top.
+  describe("by next page due", () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(new Date(2026, 10, 24, 12, 0, 0));
+    });
+    afterEach(() => vi.useRealTimers());
+
+    it("puts the book whose next page is due soonest first", async () => {
+      backend.books = [
+        { ...book("a", "2026-01-01T00:00:00Z"), total_progress: 100 },
+        { ...book("b", "2026-02-01T00:00:00Z"), total_progress: 1000 },
+      ];
+      await appState.loadData();
+      const { container, getByRole } = render(ActiveBooks);
+      await chooseSort(getByRole, "Next Page Due");
+      expect(sidebarTitles(container)).toEqual(["Book b", "Book a"]);
+    });
+  });
+
+  // Arranging by hand only makes sense in Custom order, so a move while
+  // sorted adopts what's on screen (with the move) as the new custom order.
+  it("switches back to Custom, keeping the on-screen order, when a book is moved", async () => {
+    const { container, getByRole } = render(ActiveBooks);
+    await chooseSort(getByRole, "Title");
+    await fireEvent.click(getByRole("button", { name: "Ascending" }));
+    expect(sidebarTitles(container)).toEqual(["Book b", "Book a"]);
+    const first = container.querySelector<HTMLElement>(".sidebar-item")!;
+    await fireEvent.keyDown(first, { key: "ArrowDown", altKey: true });
+    expect(backend.setBookOrder).toHaveBeenCalledWith(["a", "b"]);
+    expect(getByRole("combobox", { name: "Sort" }).textContent).toContain("Custom");
+    await waitFor(() => expect(sidebarTitles(container)).toEqual(["Book a", "Book b"]));
   });
 });
 

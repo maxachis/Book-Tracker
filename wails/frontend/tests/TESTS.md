@@ -73,15 +73,22 @@ Tests for reordering books in the Reading tab sidebar.
 
 ## sort-controls.test.ts
 
-Tests for the sort control used on the Finished tab.
+Tests for the sort control shared by the Finished and Reading tabs.
 
-- **SortControls**: Verifies the control is labelled "Sort", offers no Custom order, reports a newly chosen field while keeping the direction, shows the direction as a bare arrow (named Ascending/Descending for screen readers and the tooltip), and flips the direction when the arrow is clicked.
+- **SortControls**: Verifies the control is labelled "Sort", offers no Custom order on the Finished tab, reports a newly chosen field while keeping the direction, shows the direction as a bare arrow (named Ascending/Descending for screen readers and the tooltip), flips the direction when the arrow is clicked, and hides the arrow in Custom order.
+
+## sorting.test.ts
+
+Tests for how the Reading tab's sort options order books.
+
+- **sortReadingBooks**: Verifies Custom keeps the hand-arranged order; title, date added, fraction read, target date and next-page-due sorts honor direction; undated and goal-met books go last either way; ties keep the custom order; and the input list is left untouched.
 
 ## active-books.test.ts
 
 Tests for the Reading tab as a whole, with the backend stubbed.
 
-- **Reading tab**: Verifies books follow the saved order, there is no sort control, the first book's card shows without a click, moving the shown book keeps its card on screen, clicking another book switches the card, and moving a book saves the order.
+- **Reading tab**: Verifies books follow the saved order, the first book's card shows without a click, moving the shown book keeps its card on screen, clicking another book switches the card, and moving a book saves the order.
+- **Reading tab: sorting**: Verifies the list starts in Custom order with no direction arrow, offers the previous sorts plus Next Page Due, re-sorts by the chosen field and direction, puts the book whose next page is due soonest on top, and that moving a book while sorted switches back to Custom keeping the on-screen order.
 - **Reading tab: Add Book**: Verifies Add Book creates an "Untitled Book" instead of opening a form, and that it appears at the top, selected, with its title ready to type over.
 - **Dropdown** (`dropdown.test.ts`): Verifies the themed dropdown shows the current choice, stays as wide as its longest option whatever is selected, opens a list marking it by weight and color (no checkmark), reports a new choice (but not re-picking the current one), works by keyboard (arrows, Enter, Escape), and closes when clicking elsewhere.
 

@@ -1,30 +1,27 @@
-<script lang="ts">
-  import type { SortField, SortDirection, SortConfig } from "../types";
+<script lang="ts" generics="F extends string">
+  import type { SortDirection, SortConfig, SortOption } from "../types";
+  import { CUSTOM_ORDER } from "../services/sorting";
   import Dropdown from "./Dropdown.svelte";
 
   interface Props {
-    sortConfig: SortConfig;
-    onSort: (config: SortConfig) => void;
+    sortConfig: SortConfig<F>;
+    options: SortOption<F>[];
+    onSort: (config: SortConfig<F>) => void;
   }
 
-  let { sortConfig, onSort }: Props = $props();
+  let { sortConfig, options, onSort }: Props = $props();
 
-  const SORT_OPTIONS: { value: SortField; label: string }[] = [
-    { value: "created_at", label: "Date Added" },
-    { value: "title", label: "Title" },
-    { value: "target_date", label: "Target Date" },
-    { value: "progress", label: "Progress" },
-  ];
-
-  function handleFieldChange(field: SortField) {
+  function handleFieldChange(field: F) {
     onSort({ field, direction: sortConfig.direction });
   }
 
   const DIRECTION_DISPLAY: Record<SortDirection, { arrow: string; name: string }> = {
-    asc: { arrow: "\u2191", name: "Ascending" },
-    desc: { arrow: "\u2193", name: "Descending" },
+    asc: { arrow: "↑", name: "Ascending" },
+    desc: { arrow: "↓", name: "Descending" },
   };
   const direction = $derived(DIRECTION_DISPLAY[sortConfig.direction]);
+  /** A hand-arranged order has no direction to flip. */
+  const hasDirection = $derived(sortConfig.field !== CUSTOM_ORDER);
 
   function toggleDirection() {
     const newDirection: SortDirection =
@@ -38,19 +35,21 @@
     <span class="label-text" aria-hidden="true">Sort</span>
     <Dropdown
       label="Sort"
-      options={SORT_OPTIONS}
+      {options}
       value={sortConfig.field}
       onChange={handleFieldChange}
     />
   </div>
-  <button
-    class="direction-button"
-    aria-label={direction.name}
-    title={direction.name}
-    onclick={toggleDirection}
-  >
-    {direction.arrow}
-  </button>
+  {#if hasDirection}
+    <button
+      class="direction-button"
+      aria-label={direction.name}
+      title={direction.name}
+      onclick={toggleDirection}
+    >
+      {direction.arrow}
+    </button>
+  {/if}
 </div>
 
 <style>

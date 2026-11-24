@@ -32,6 +32,17 @@ vi.mock("../wailsjs/go/main/App", () => {
       backend.books = [...backend.books, created];
       return ok(created);
     },
+    UpdateBook: (req: { id: string; current_progress?: number }) => {
+      backend.books = backend.books.map((b) =>
+        b.id === req.id && req.current_progress !== undefined ? { ...b, current_progress: req.current_progress } : b
+      );
+      return ok(backend.books.find((b) => b.id === req.id));
+    },
+    MarkBookComplete: (id: string) => {
+      const finished = backend.books.find((b) => b.id === id)!;
+      backend.books = backend.books.filter((b) => b.id !== id);
+      return ok({ ...finished, completed_at: "2026-12-01T00:00:00Z" });
+    },
     SetBookOrder: (ids: string[]) => {
       backend.setBookOrder(ids);
       backend.order = ids;
@@ -43,6 +54,11 @@ vi.mock("../wailsjs/go/main/App", () => {
 import ActiveBooks from "../src/views/ActiveBooks.svelte";
 import { appState } from "../src/lib/stores/state.svelte";
 import { resetDueClock } from "../src/lib/stores/dueClock.svelte";
+
+// jsdom has no Web Animations; the sidebar animates books leaving the list.
+Element.prototype.getAnimations ??= () => [];
+Element.prototype.animate ??= () =>
+  ({ cancel() {}, finish() {}, onfinish: null, finished: Promise.resolve() }) as unknown as Animation;
 
 function book(id: string, created_at: string): Book {
   return {
@@ -70,6 +86,10 @@ beforeEach(async () => {
 
 function sidebarTitles(container: HTMLElement): (string | null)[] {
   return [...container.querySelectorAll(".sidebar-item .item-title")].map((el) => el.textContent);
+}
+
+function shownCardTitle(container: HTMLElement): string | undefined {
+  return container.querySelector(".detail h3, .detail .book-title")?.textContent?.trim();
 }
 
 async function chooseSort(getByRole: ReturnType<typeof render>["getByRole"], label: string) {
@@ -101,6 +121,16 @@ describe("Reading tab", () => {
     await waitFor(() => {
       expect(container.querySelector(".book-card .book-title")?.textContent).toContain("Book a");
     });
+  });
+
+  // A finished book leaves the Reading list, so the card moves on to the top
+  // book and then stays there like any other shown book.
+  it("shows the top book once the shown book is marked complete", async () => {
+    const { container, getByRole } = render(ActiveBooks);
+    expect(shownCardTitle(container)).toBe("Book a");
+    await fireEvent.click(getByRole("button", { name: "Mark Complete" }));
+    await waitFor(() => expect(sidebarTitles(container)).toEqual(["Book b"]));
+    expect(shownCardTitle(container)).toBe("Book b");
   });
 
   it("switches the card when another book is clicked", async () => {
@@ -184,6 +214,26 @@ describe("Reading tab: sorting", () => {
       const { container, getByRole } = render(ActiveBooks);
       await chooseSort(getByRole, "Next Page Due");
       expect(sidebarTitles(container)).toEqual(["Book b", "Book a"]);
+    });
+
+    // Logging progress pushes a book's next page later, which can drop it
+    // down the list; the card must stay on the book being logged rather than
+    // jump to whichever book is now on top. The sort outlives the tab, so on
+    // coming back to Reading the card opens on the top book of the sorted list.
+    it("keeps the card on the shown book when logging progress re-sorts the list", async () => {
+      backend.books = [
+        { ...book("a", "2026-01-01T00:00:00Z"), total_progress: 100 },
+        { ...book("b", "2026-02-01T00:00:00Z"), total_progress: 1000 },
+      ];
+      await appState.loadData();
+      appState.setReadingSort({ field: "next_due", direction: "asc" });
+      const { container } = render(ActiveBooks);
+      expect(shownCardTitle(container)).toBe("Book b");
+      const box = container.querySelector<HTMLInputElement>("#progress-b")!;
+      await fireEvent.input(box, { target: { value: "1000" } });
+      await fireEvent.change(box);
+      await waitFor(() => expect(sidebarTitles(container)).toEqual(["Book a", "Book b"]));
+      expect(shownCardTitle(container)).toBe("Book b");
     });
   });
 

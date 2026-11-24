@@ -34,6 +34,18 @@
     appState.sortedReadingBooks.find((b) => b.id === selectedId) ?? appState.sortedReadingBooks[0]
   );
 
+  // Whatever the card shows stays shown until the reader picks another book:
+  // a sort like Next Page Due reorders the list as progress is logged and as
+  // countdowns restart, and the card must not jump to the new top book.
+  $effect(() => {
+    if (selectedId === null && selectedBook) selectedId = selectedBook.id;
+  });
+
+  /** After the shown book leaves the list, fall back to (and keep) the new top book. */
+  function releaseIfShown(book: Book) {
+    if (selectedId === book.id) selectedId = null;
+  }
+
   // The sidebar shows today's goal for every book, so each needs one even
   // before its card has been opened.
   $effect(() => {
@@ -78,6 +90,7 @@
   async function handleDelete(book: Book) {
     await deleteBook(book.id);
     await appState.refreshBooks();
+    releaseIfShown(book);
   }
 
   async function handleProgressUpdate(book: Book, progress: number) {
@@ -88,6 +101,7 @@
   async function handleMarkComplete(book: Book) {
     await markBookComplete(book.id);
     await appState.refreshBooks();
+    releaseIfShown(book);
   }
 
   // New books have no saved position, so the reading order puts them on top.

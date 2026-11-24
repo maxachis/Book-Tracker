@@ -87,8 +87,8 @@ Tests for how the Reading tab's sort options order books.
 
 Tests for the Reading tab as a whole, with the backend stubbed.
 
-- **Reading tab**: Verifies books follow the saved order, the first book's card shows without a click, moving the shown book keeps its card on screen, clicking another book switches the card, and moving a book saves the order.
-- **Reading tab: sorting**: Verifies the list starts in Custom order with no direction arrow, offers the previous sorts plus Next Page Due, re-sorts by the chosen field and direction, puts the book whose next page is due soonest on top, and that moving a book while sorted switches back to Custom keeping the on-screen order. The control sits in the header beside Add Book, with no visible "Sort" caption but "Sort" as its name and tooltip.
+- **Reading tab**: Verifies books follow the saved order, the first book's card shows without a click, moving the shown book keeps its card on screen, marking the shown book complete moves the card to the new top book, clicking another book switches the card, and moving a book saves the order.
+- **Reading tab: sorting**: Verifies the list starts in Custom order with no direction arrow, offers the previous sorts plus Next Page Due, re-sorts by the chosen field and direction, puts the book whose next page is due soonest on top, that logging progress which re-sorts the list (e.g. by Next Page Due) keeps the card on the book being logged, and that moving a book while sorted switches back to Custom keeping the on-screen order. The control sits in the header beside Add Book, with no visible "Sort" caption but "Sort" as its name and tooltip.
 - **Reading tab: Add Book**: Verifies Add Book creates an "Untitled Book" instead of opening a form, and that it appears at the top, selected, with its title ready to type over.
 - **Dropdown** (`dropdown.test.ts`): Verifies the themed dropdown shows the current choice, stays as wide as its longest option whatever is selected, opens a list marking it by weight and color (no checkmark), reports a new choice (but not re-picking the current one), works by keyboard (arrows, Enter, Escape), and closes when clicking elsewhere.
 
